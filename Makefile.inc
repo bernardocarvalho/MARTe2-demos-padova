@@ -24,7 +24,6 @@
 #
 #############################################################
 SPB    = DataSources/MDSReaderNS.x \
-	DataSources/MDSStream.x \
 	DataSources/SimpleUDPSender.x \
 	GAMs/FixedGAMExample1.x \
 	GAMs/VariableGAMExample1.x \
@@ -33,6 +32,8 @@ SPB    = DataSources/MDSReaderNS.x \
 	Other/ControllerEx2.x \
 	Other/Examples.x \
 	Other/MDSStructuredDataIEx1.x
+
+#DataSources/MDSStream.x 
 
 MAKEDEFAULTDIR=$(MARTe2_DIR)/MakeDefaults
 
