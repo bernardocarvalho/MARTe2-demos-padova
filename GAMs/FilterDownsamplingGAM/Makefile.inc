@@ -23,34 +23,31 @@
 # $Id: Makefile.inc 3 2012-01-15 16:26:07Z aneto $
 #
 #############################################################
-SPB    = DataSources/MDSReaderNS.x \
-	DataSources/SimpleUDPSender.x \
-	GAMs/FixedGAMExample1.x \
-	GAMs/VariableGAMExample1.x \
-	GAMs/FilterDownsamplingGAM.x \
-	Interfaces/TCPSocketMessageProxyExample.x \
-	Other/ControllerEx1.x \
-	Other/ControllerEx2.x \
-	Other/Examples.x \
-	Other/MDSStructuredDataIEx1.x
+OBJSX=FilterDownsamplingGAM.x
 
-#DataSources/MDSStream.x 
+PACKAGE=Components/GAMs
 
+ROOT_DIR=../../
 MAKEDEFAULTDIR=$(MARTe2_DIR)/MakeDefaults
-
-ROOT_DIR=.
 include $(MAKEDEFAULTDIR)/MakeStdLibDefs.$(TARGET)
 
-all: $(OBJS) $(SUBPROJ) check-env
-	echo  $(OBJS)
+INCLUDES += -I.
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L0Types
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L1Portability
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L2Objects
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L3Streams
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L4Messages
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L4Configuration
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L5GAMs
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L1Portability
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L3Services
+INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L4Messages
+
+
+all: $(OBJS) $(SUBPROJ) \
+	$(BUILD_DIR)/FilterDownsamplingGAM$(LIBEXT) \
+	$(BUILD_DIR)/FilterDownsamplingGAM$(DLLEXT)
+	    echo  $(OBJS)
 
 include $(MAKEDEFAULTDIR)/MakeStdLibRules.$(TARGET)
-
-check-env:
-ifndef MARTe2_DIR
-    $(error MARTe2_DIR is undefined)
-endif
-ifndef MARTe2_Components_DIR
-    $(error MARTe2_Components_DIR is undefined)
-endif
 

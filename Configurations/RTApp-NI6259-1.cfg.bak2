@@ -305,10 +305,10 @@ $TestApp = {
         }
         +GAMWF1 = {
             Class = WaveformGAM::WaveformSin
-            Amplitude = 1.0
+            Amplitude = 5.0
             Frequency = 1.0
             Phase = 0.0
-            Offset = 0.0
+            Offset = 1.1
             InputSignals = {
                 Time = {
                     DataSource = DDB1
