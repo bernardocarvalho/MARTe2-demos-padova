@@ -1,6 +1,7 @@
 #!/bin/bash
-#Arguments -f FILENAME -m MESSAGE [-d cgdb|strace]
+#Arguments -f FILENAME -m MESSAGE | -s STATE [-d cgdb|strace]
 
+MDS=0
 DEBUG=""
 INPUT_ARGS=$*
 while test $# -gt 0
@@ -9,16 +10,24 @@ do
         -d|--debug)
         DEBUG="$2"
         ;;
+        --mds)
+        MDS=1
+        ;;
     esac
     shift
 done
 
-if [ -z ${MARTe2_DIR+x} ]; then echo "Please set the MARTe2_DIR environment variable"; exit; fi
-if [ -z ${MARTe2_Components_DIR+x} ]; then echo "Please set the MARTe2_Components_DIR environment variable"; exit; fi
+if [ -z ${MARTe2_DIR+x} ]; then 
+MARTe2_DIR=~/Projects/MARTe2-dev
+fi
+if [ -z ${MARTe2_Components_DIR+x} ]; then 
+export MARTe2_Components_DIR=~/Projects/MARTe2-components
+fi
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/DataSources/MDSReaderNS/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/DataSources/MDSStream/
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/GAMs/FixedGAMExample1/
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MARTe2_DIR/Build/x86-linux/Core/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MARTe2_Components_DIR/Build/x86-linux/Components/DataSources/EPICSCA/
@@ -52,9 +61,11 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$EPICS_BASE/lib/$EPICS_HOST_ARCH
 echo $LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
+if [ ${MDS} == 1 ]; then
 export rtappwriter_path=../Trees
 export rtappreader_path=../Trees
 mdstcl < CreateMDSTrees.tcl
+fi
 
 if [ "$DEBUG" = "cgdb" ]
 then
