@@ -1,0 +1,28 @@
+<_MyController1>
+    <Class>ControllerEx1</Class>
+    <Tau>0.5</Tau>
+    <Gains1>
+        <Low> 
+            <Gain1>-1.0</Gain1>
+            <Gain2>3</Gain2>
+            <Gain3>{-9.0, -8.0, -7.0, -6.0, -5.0, -4.0}</Gain3>
+        </Low> 
+        <High>
+            <Gain1>7.0</Gain1>
+            <Gain2>4</Gain2>
+            <Gain3>{9.0, 8.0, 7.0, 6.0, 5.0, 4.0}</Gain3>
+        </High>
+    </Gains1>
+    <Gains2>
+        <Low> 
+            <Gain1>-1.1</Gain1>
+            <Gain2>5</Gain2>
+            <Gain3>{-9.1, -8.1, -7.1, -6.1, -5.1, -4.1}</Gain3>
+        </Low> 
+        <High>
+            <Gain1>7.1</Gain1>
+            <Gain2>9</Gain2>
+            <Gain3>{9.1, 8.1, 7.1, 6.1, 5.1, 4.1}</Gain3>
+         </High>
+     </Gains2>
+ </_MyController1>
