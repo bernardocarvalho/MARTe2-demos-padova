@@ -1,6 +1,6 @@
 /**
- * @file ControllerEx1.cpp
- * @brief Source file for class ControllerEx1
+ * @file ControllerEx2.cpp
+ * @brief Source file for class ControllerEx2
  * @date 06/04/2018
  * @author Andre Neto
  *
@@ -17,7 +17,7 @@
  * or implied. See the Licence permissions and limitations under the Licence.
 
  * @details This source file contains the definition of all the methods for
- * the class ControllerEx1 (public, protected, and private). Be aware that some 
+ * the class ControllerEx2 (public, protected, and private). Be aware that some 
  * methods, such as those inline could be defined on the header file, instead.
  */
 
@@ -29,7 +29,9 @@
 /*                         Project header includes                           */
 /*---------------------------------------------------------------------------*/
 #include "AdvancedErrorManagement.h"
-#include "ControllerEx1.h"
+#include "ControllerEx2.h"
+#include "CLASSMETHODREGISTER.h"
+#include "RegisteredMethodsMessageFilter.h"
 
 /*---------------------------------------------------------------------------*/
 /*                           Static definitions                              */
@@ -40,18 +42,22 @@
 /*---------------------------------------------------------------------------*/
 namespace MARTe2Tutorial {
 
-ControllerEx1::ControllerEx1() : Object() {
+ControllerEx2::ControllerEx2() : Object(), MessageI() {
+    using namespace MARTe;
     tau = 0.f;
+    ReferenceT<RegisteredMethodsMessageFilter> filter(GlobalObjectsDatabase::Instance()->GetStandardHeap());
+    filter->SetDestination(this);
+    MessageI::InstallMessageFilter(filter);
 }
 
-ControllerEx1::~ControllerEx1 () {
+ControllerEx2::~ControllerEx2 () {
     if (GetName() != NULL) {
         REPORT_ERROR_STATIC(MARTe::ErrorManagement::Information, "No more references pointing at %s [%s]. "
         "The Object will be safely deleted.", GetName(), GetClassProperties()->GetName());
     }
 }
 
-bool ControllerEx1::Initialise(MARTe::StructuredDataI &data) {
+bool ControllerEx2::Initialise(MARTe::StructuredDataI &data) {
     using namespace MARTe;
     bool ok = Object::Initialise(data);
     if (ok) {
@@ -84,22 +90,27 @@ bool ControllerEx1::Initialise(MARTe::StructuredDataI &data) {
             ok = data.MoveToAncestor(2u); 
         }
     }
-    if (ok) {
-        REPORT_ERROR(ErrorManagement::Information, "Tau %f", tau);
-        REPORT_ERROR(ErrorManagement::Information, "Gains 1 low gains");
-        PrintGains(&gains1.lowGains);
-        REPORT_ERROR(ErrorManagement::Information, "Gains 1 high gains");
-        PrintGains(&gains1.highGains);
-        REPORT_ERROR(ErrorManagement::Information, "Gains 2 low gains");
-        PrintGains(&gains2.lowGains);
-        REPORT_ERROR(ErrorManagement::Information, "Gains 2 high gains");
-        PrintGains(&gains2.highGains);
-    }
 
+    if (ok) {
+        PrintGainsInfo();
+    }
     return ok;
 }
 
-bool ControllerEx1::LoadGains(Gain &gainToLoad, MARTe::StructuredDataI &data) {
+void ControllerEx2::PrintGainsInfo() {
+    using namespace MARTe;
+    REPORT_ERROR(ErrorManagement::Information, "Tau %f", tau);
+    REPORT_ERROR(ErrorManagement::Information, "Gains 1 low gains");
+    PrintGains(gains1.lowGains);
+    REPORT_ERROR(ErrorManagement::Information, "Gains 1 high gains");
+    PrintGains(gains1.highGains);
+    REPORT_ERROR(ErrorManagement::Information, "Gains 2 low gains");
+    PrintGains(gains2.lowGains);
+    REPORT_ERROR(ErrorManagement::Information, "Gains 2 high gains");
+    PrintGains(gains2.highGains);
+}
+
+bool ControllerEx2::LoadGains(Gain &gainToLoad, MARTe::StructuredDataI &data) {
     using namespace MARTe;
     bool ok = data.Read("Gain1", gainToLoad.gain1);
     if (!ok) {
@@ -136,13 +147,26 @@ bool ControllerEx1::LoadGains(Gain &gainToLoad, MARTe::StructuredDataI &data) {
     return ok; 
 }
 
-void ControllerEx1::PrintGains(Gain *gainToPrint) {
+void ControllerEx2::PrintGains(Gain &gainToPrint) {
     using namespace MARTe;
-    REPORT_ERROR(ErrorManagement::Information, "Gain1 %f", gainToPrint->gain1);
-    REPORT_ERROR(ErrorManagement::Information, "Gain2 %d", gainToPrint->gain2);
-    REPORT_ERROR(ErrorManagement::Information, "Gain3 %f", gainToPrint->gain3);
+    REPORT_ERROR(ErrorManagement::Information, "Gain1 %f", gainToPrint.gain1);
+    REPORT_ERROR(ErrorManagement::Information, "Gain2 %d", gainToPrint.gain2);
+    REPORT_ERROR(ErrorManagement::Information, "Gain3 %f", gainToPrint.gain3);
 }
-CLASS_REGISTER(ControllerEx1, "")
+
+MARTe::ErrorManagement::ErrorType ControllerEx2::ResetGain1() {
+    using namespace MARTe;
+    REPORT_ERROR(ErrorManagement::Information, "Resetting gain1");
+    gains1.lowGains.gain1 = 0;
+    gains1.highGains.gain1 = 0;
+    gains2.lowGains.gain1 = 0;
+    gains2.highGains.gain1 = 0;
+    PrintGainsInfo();
+    return ErrorManagement::NoError;
+}
+
+CLASS_REGISTER(ControllerEx2, "")
+CLASS_METHOD_REGISTER(ControllerEx2, ResetGain1)
 }
 
 

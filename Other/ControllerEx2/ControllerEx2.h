@@ -1,6 +1,6 @@
 /**
- * @file ControllerEx1.h
- * @brief Header file for class ControllerEx1
+ * @file ControllerEx2.h
+ * @brief Header file for class ControllerEx2
  * @date 06/04/2018
  * @author Andre Neto
  *
@@ -16,13 +16,13 @@
  * basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the Licence permissions and limitations under the Licence.
 
- * @details This header file contains the declaration of the class ControllerEx1
+ * @details This header file contains the declaration of the class ControllerEx2
  * with all of its public, protected and private members. It may also include
  * definitions for inline methods which need to be visible to the compiler.
  */
 
-#ifndef EXAMPLES_CORE_CONTROLLEREXAMPLE1_H_
-#define EXAMPLES_CORE_CONTROLLEREXAMPLE1_H_
+#ifndef EXAMPLES_CORE_CONTROLLEREXAMPLE2_H_
+#define EXAMPLES_CORE_CONTROLLEREXAMPLE2_H_
 
 /*---------------------------------------------------------------------------*/
 /*                        Standard header includes                           */
@@ -31,7 +31,7 @@
 /*---------------------------------------------------------------------------*/
 /*                        Project header includes                            */
 /*---------------------------------------------------------------------------*/
-
+#include "MessageI.h"
 #include "Object.h"
 
 /*---------------------------------------------------------------------------*/
@@ -54,16 +54,16 @@ struct Gains {
 /**
  * @brief A MARTe::Object class that will read directly read its configuration from a structure.
  */
-class ControllerEx1: public MARTe::Object {
+class ControllerEx2: public MARTe::Object, public MARTe::MessageI {
 public:
     CLASS_REGISTER_DECLARATION()
 
     /**
      * @brief NOOP.
      */
-    ControllerEx1    ();
+    ControllerEx2    ();
 
-    virtual ~ControllerEx1 ();
+    virtual ~ControllerEx2 ();
 
     /**
      * Read all the properties from the Gains struct (names must match the ones of the struct!
@@ -93,9 +93,15 @@ public:
      */
     virtual bool Initialise(MARTe::StructuredDataI &data);
 
+    /**
+     * @brief Example of an RPC.
+     */
+    MARTe::ErrorManagement::ErrorType ResetGain1();
+
 private:
     bool LoadGains(Gain &gainToLoad, MARTe::StructuredDataI &data);
-    void PrintGains(Gain *gainToPrint);
+    void PrintGains(Gain &gainToPrint);
+    void PrintGainsInfo();
 
     /**
      * A list of properties.
