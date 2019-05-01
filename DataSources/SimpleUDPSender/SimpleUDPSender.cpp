@@ -171,7 +171,7 @@ bool SimpleUDPSender::GetSignalMemoryBuffer(const MARTe::uint32 signalIdx, const
 }
 
 const MARTe::char8* SimpleUDPSender::GetBrokerName(MARTe::StructuredDataI& data, const MARTe::SignalDirection direction) {
-    return "MemoryMapSynchronisedOutputBroker";
+    return "";
 }
 
 bool SimpleUDPSender::PrepareNextState(const MARTe::char8* const currentStateName, const MARTe::char8* const nextStateName) {
@@ -179,10 +179,7 @@ bool SimpleUDPSender::PrepareNextState(const MARTe::char8* const currentStateNam
 }
     
 bool SimpleUDPSender::Synchronise() {
-    bool ok = udpSocket.Write(payload, totalMemorySize);
-    if (ok) {
-        //ok = udpSocket.Flush();
-    }
+    bool ok = true;
     return ok;
 }
 
