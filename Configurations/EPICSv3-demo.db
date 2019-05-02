@@ -1,0 +1,28 @@
+record( longin, "MARTE2-DEMO-APP:STATUS")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( longin, "MARTE2-DEMO-APP:COMMAND")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( longin, "MARTE2-DEMO-APP:RESET")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( waveform, "MARTE2-DEMO-APP:HIST-IDLE-CT")
+{
+   field(DTYP, "Soft Channel")
+   field(NELM, 10)
+   field(FTVL, "LONG")
+}
+
+record( waveform, "MARTE2-DEMO-APP:HIST-RUN-CT")
+{
+   field(DTYP, "Soft Channel")
+   field(NELM, 10)
+   field(FTVL, "LONG")
+}
