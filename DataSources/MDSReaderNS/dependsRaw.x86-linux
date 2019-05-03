@@ -79,8 +79,8 @@ MDSReaderNS.o: MDSReaderNS.cpp \
  /home/aneto/Projects/MARTe2-dev//Source/Core/BareMetal/L1Portability/MemoryOperationsHelper.h \
  /home/aneto/Projects/MARTe2-dev//Source/Core/BareMetal/L1Portability/StreamI.h \
  MDSReaderNS.h /usr/local/mdsplus/include/mdsobjects.h \
- /usr/local/mdsplus/include/config.h /usr/local/mdsplus/include/dbidef.h \
- /usr/local/mdsplus/include/ncidef.h \
+ /usr/local/mdsplus/include/mdsplus/mdsconfig.h \
+ /usr/local/mdsplus/include/dbidef.h /usr/local/mdsplus/include/ncidef.h \
  /usr/local/mdsplus/include/mdstypes.h \
  /usr/local/mdsplus/include/usagedef.h \
  /usr/local/mdsplus/include/mdsplus/mdsplus.h \
