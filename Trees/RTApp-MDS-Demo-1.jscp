@@ -1,0 +1,272 @@
+Scope.geometry: 1920x1018+0+28
+Scope.update.disable: false
+Scope.update.disable_when_icon: true
+Scope.font: java.awt.Font[family=Dialog,name=Dialog,style=plain,size=12]
+
+
+Scope.color_0: Black,java.awt.Color[r=0,g=0,b=0]
+Scope.color_1: Blue,java.awt.Color[r=0,g=0,b=255]
+Scope.color_2: Cyan,java.awt.Color[r=0,g=255,b=255]
+Scope.color_3: Green,java.awt.Color[r=0,g=255,b=0]
+Scope.color_4: Magenta,java.awt.Color[r=255,g=0,b=255]
+Scope.color_5: Orange,java.awt.Color[r=255,g=200,b=0]
+Scope.color_6: Pink,java.awt.Color[r=255,g=175,b=175]
+Scope.color_7: Red,java.awt.Color[r=255,g=0,b=0]
+Scope.color_8: Yellow,java.awt.Color[r=255,g=255,b=0]
+
+Scope.data_server_name: local access
+Scope.data_server_class: LocalDataProvider
+Scope.reversed: false
+
+Scope.global_1_1.horizontal_offset: 0
+Scope.global_1_1.vertical_offset: 0
+
+Scope.columns: 4
+Scope.rows_in_column_1: 2
+
+
+Scope.plot_1_1.height: 446
+Scope.plot_1_1.grid_mode: 0
+Scope.plot_1_1.x_log: false
+Scope.plot_1_1.y_log: false
+Scope.plot_1_1.update_limits: true
+Scope.plot_1_1.legend: (2.6040221875,0.20829529969080307)
+Scope.plot_1_1.palette: Green scale
+Scope.plot_1_1.bitShift: 0
+Scope.plot_1_1.bitClip: false
+Scope.plot_1_1.experiment: RTAPPDEMO
+Scope.plot_1_1.num_shot: 1
+Scope.plot_1_1.num_expr: 2
+Scope.plot_1_1.continuous_update: 0
+Scope.plot_1_1.global_defaults: 261889
+Scope.plot_1_1.label_1: Measurement0
+Scope.plot_1_1.y_expr_1: \RTAPPDEMO::TOP.INP:MEAS0
+Scope.plot_1_1.mode_1D_1_1: Line
+Scope.plot_1_1.mode_2D_1_1: xz(y)
+Scope.plot_1_1.color_1_1: 3
+Scope.plot_1_1.marker_1_1: 0
+Scope.plot_1_1.step_marker_1_1: 1
+Scope.plot_1_1.label_2: Reference0
+Scope.plot_1_1.y_expr_2: \RTAPPDEMO::TOP.REFS:REF0
+Scope.plot_1_1.mode_1D_2_1: Line
+Scope.plot_1_1.mode_2D_2_1: xz(y)
+Scope.plot_1_1.color_2_1: 7
+Scope.plot_1_1.marker_2_1: 0
+Scope.plot_1_1.step_marker_2_1: 1
+
+
+Scope.plot_2_1.height: 446
+Scope.plot_2_1.grid_mode: 0
+Scope.plot_2_1.x_log: false
+Scope.plot_2_1.y_log: false
+Scope.plot_2_1.update_limits: true
+Scope.plot_2_1.legend: (2.8162565625,0.6004526125282015)
+Scope.plot_2_1.palette: Green scale
+Scope.plot_2_1.bitShift: 0
+Scope.plot_2_1.bitClip: false
+Scope.plot_2_1.experiment: RTAPPDEMO
+Scope.plot_2_1.num_shot: 1
+Scope.plot_2_1.num_expr: 2
+Scope.plot_2_1.continuous_update: 0
+Scope.plot_2_1.global_defaults: 261889
+Scope.plot_2_1.label_1: Error0
+Scope.plot_2_1.y_expr_1: \RTAPPDEMO::TOP.ERRORS:ERROR0
+Scope.plot_2_1.mode_1D_1_1: Line
+Scope.plot_2_1.mode_2D_1_1: xz(y)
+Scope.plot_2_1.color_1_1: 3
+Scope.plot_2_1.marker_1_1: 0
+Scope.plot_2_1.step_marker_1_1: 1
+Scope.plot_2_1.label_2: Control0
+Scope.plot_2_1.y_expr_2: \RTAPPDEMO::TOP.CONTROLS:CONTROL0
+Scope.plot_2_1.mode_1D_2_1: Line
+Scope.plot_2_1.mode_2D_2_1: xz(y)
+Scope.plot_2_1.color_2_1: 7
+Scope.plot_2_1.marker_2_1: 0
+Scope.plot_2_1.step_marker_2_1: 1
+Scope.rows_in_column_2: 2
+
+
+Scope.plot_1_2.height: 446
+Scope.plot_1_2.grid_mode: 0
+Scope.plot_1_2.x_log: false
+Scope.plot_1_2.y_log: false
+Scope.plot_1_2.update_limits: true
+Scope.plot_1_2.legend: (2.9011503124999996,0.6730711896118686)
+Scope.plot_1_2.palette: Green scale
+Scope.plot_1_2.bitShift: 0
+Scope.plot_1_2.bitClip: false
+Scope.plot_1_2.experiment: RTAPPDEMO
+Scope.plot_1_2.num_shot: 1
+Scope.plot_1_2.num_expr: 2
+Scope.plot_1_2.continuous_update: 0
+Scope.plot_1_2.global_defaults: 261889
+Scope.plot_1_2.label_1: Measurement1
+Scope.plot_1_2.y_expr_1: \RTAPPDEMO::TOP.INP:MEAS1
+Scope.plot_1_2.mode_1D_1_1: Line
+Scope.plot_1_2.mode_2D_1_1: xz(y)
+Scope.plot_1_2.color_1_1: 3
+Scope.plot_1_2.marker_1_1: 0
+Scope.plot_1_2.step_marker_1_1: 1
+Scope.plot_1_2.label_2: Reference1
+Scope.plot_1_2.y_expr_2: \RTAPPDEMO::TOP.REFS:REF1
+Scope.plot_1_2.mode_1D_2_1: Line
+Scope.plot_1_2.mode_2D_2_1: xz(y)
+Scope.plot_1_2.color_2_1: 7
+Scope.plot_1_2.marker_2_1: 0
+Scope.plot_1_2.step_marker_2_1: 1
+
+
+Scope.plot_2_2.height: 446
+Scope.plot_2_2.grid_mode: 0
+Scope.plot_2_2.x_log: false
+Scope.plot_2_2.y_log: false
+Scope.plot_2_2.update_limits: true
+Scope.plot_2_2.legend: (2.3153834375,0.9047828409161529)
+Scope.plot_2_2.palette: Green scale
+Scope.plot_2_2.bitShift: 0
+Scope.plot_2_2.bitClip: false
+Scope.plot_2_2.experiment: RTAPPDEMO
+Scope.plot_2_2.num_shot: 1
+Scope.plot_2_2.num_expr: 2
+Scope.plot_2_2.continuous_update: 0
+Scope.plot_2_2.global_defaults: 261889
+Scope.plot_2_2.label_1: Error1
+Scope.plot_2_2.y_expr_1: \RTAPPDEMO::TOP.ERRORS:ERROR1
+Scope.plot_2_2.mode_1D_1_1: Line
+Scope.plot_2_2.mode_2D_1_1: xz(y)
+Scope.plot_2_2.color_1_1: 3
+Scope.plot_2_2.marker_1_1: 0
+Scope.plot_2_2.step_marker_1_1: 1
+Scope.plot_2_2.label_2: Control1
+Scope.plot_2_2.y_expr_2: \RTAPPDEMO::TOP.CONTROLS:CONTROL1
+Scope.plot_2_2.mode_1D_2_1: Line
+Scope.plot_2_2.mode_2D_2_1: xz(y)
+Scope.plot_2_2.color_2_1: 7
+Scope.plot_2_2.marker_2_1: 0
+Scope.plot_2_2.step_marker_2_1: 1
+Scope.rows_in_column_3: 2
+
+
+Scope.plot_1_3.height: 446
+Scope.plot_1_3.grid_mode: 0
+Scope.plot_1_3.x_log: false
+Scope.plot_1_3.y_log: false
+Scope.plot_1_3.update_limits: true
+Scope.plot_1_3.legend: (2.6549584374999995,0.8460185269922618)
+Scope.plot_1_3.palette: Green scale
+Scope.plot_1_3.bitShift: 0
+Scope.plot_1_3.bitClip: false
+Scope.plot_1_3.experiment: RTAPPDEMO
+Scope.plot_1_3.num_shot: 1
+Scope.plot_1_3.num_expr: 2
+Scope.plot_1_3.continuous_update: 0
+Scope.plot_1_3.global_defaults: 261889
+Scope.plot_1_3.label_1: Measurement2
+Scope.plot_1_3.y_expr_1: \RTAPPDEMO::TOP.INP:MEAS2
+Scope.plot_1_3.mode_1D_1_1: Line
+Scope.plot_1_3.mode_2D_1_1: xz(y)
+Scope.plot_1_3.color_1_1: 3
+Scope.plot_1_3.marker_1_1: 0
+Scope.plot_1_3.step_marker_1_1: 1
+Scope.plot_1_3.label_2: Reference2
+Scope.plot_1_3.y_expr_2: \RTAPPDEMO::TOP.REFS:REF2
+Scope.plot_1_3.mode_1D_2_1: Line
+Scope.plot_1_3.mode_2D_2_1: xz(y)
+Scope.plot_1_3.color_2_1: 7
+Scope.plot_1_3.marker_2_1: 0
+Scope.plot_1_3.step_marker_2_1: 1
+
+
+Scope.plot_2_3.height: 446
+Scope.plot_2_3.grid_mode: 0
+Scope.plot_2_3.x_log: false
+Scope.plot_2_3.y_log: false
+Scope.plot_2_3.update_limits: true
+Scope.plot_2_3.legend: (2.9860440625,0.8803871562601102)
+Scope.plot_2_3.palette: Green scale
+Scope.plot_2_3.bitShift: 0
+Scope.plot_2_3.bitClip: false
+Scope.plot_2_3.experiment: RTAPPDEMO
+Scope.plot_2_3.num_shot: 1
+Scope.plot_2_3.num_expr: 2
+Scope.plot_2_3.continuous_update: 0
+Scope.plot_2_3.global_defaults: 261889
+Scope.plot_2_3.label_1: Error2
+Scope.plot_2_3.y_expr_1: \RTAPPDEMO::TOP.ERRORS:ERROR2
+Scope.plot_2_3.mode_1D_1_1: Line
+Scope.plot_2_3.mode_2D_1_1: xz(y)
+Scope.plot_2_3.color_1_1: 3
+Scope.plot_2_3.marker_1_1: 0
+Scope.plot_2_3.step_marker_1_1: 1
+Scope.plot_2_3.label_2: Control2
+Scope.plot_2_3.y_expr_2: \RTAPPDEMO::TOP.CONTROLS:CONTROL2
+Scope.plot_2_3.mode_1D_2_1: Line
+Scope.plot_2_3.mode_2D_2_1: xz(y)
+Scope.plot_2_3.color_2_1: 7
+Scope.plot_2_3.marker_2_1: 0
+Scope.plot_2_3.step_marker_2_1: 1
+Scope.rows_in_column_4: 2
+
+
+Scope.plot_1_4.height: 446
+Scope.plot_1_4.grid_mode: 0
+Scope.plot_1_4.x_log: false
+Scope.plot_1_4.y_log: false
+Scope.plot_1_4.update_limits: true
+Scope.plot_1_4.legend: (2.1031490625,0.7478592273979847)
+Scope.plot_1_4.palette: Green scale
+Scope.plot_1_4.bitShift: 0
+Scope.plot_1_4.bitClip: false
+Scope.plot_1_4.experiment: RTAPPDEMO
+Scope.plot_1_4.num_shot: 1
+Scope.plot_1_4.num_expr: 2
+Scope.plot_1_4.continuous_update: 0
+Scope.plot_1_4.global_defaults: 261889
+Scope.plot_1_4.label_1: Measurement3
+Scope.plot_1_4.y_expr_1: \RTAPPDEMO::TOP.INP:MEAS3
+Scope.plot_1_4.mode_1D_1_1: Line
+Scope.plot_1_4.mode_2D_1_1: xz(y)
+Scope.plot_1_4.color_1_1: 3
+Scope.plot_1_4.marker_1_1: 0
+Scope.plot_1_4.step_marker_1_1: 1
+Scope.plot_1_4.label_2: Reference3
+Scope.plot_1_4.y_expr_2: \RTAPPDEMO::TOP.REFS:REF3
+Scope.plot_1_4.mode_1D_2_1: Line
+Scope.plot_1_4.mode_2D_2_1: xz(y)
+Scope.plot_1_4.color_2_1: 7
+Scope.plot_1_4.marker_2_1: 0
+Scope.plot_1_4.step_marker_2_1: 1
+
+
+Scope.plot_2_4.height: 446
+Scope.plot_2_4.grid_mode: 0
+Scope.plot_2_4.x_log: false
+Scope.plot_2_4.y_log: false
+Scope.plot_2_4.update_limits: true
+Scope.plot_2_4.legend: (2.9520865625,0.8932615567464386)
+Scope.plot_2_4.palette: Green scale
+Scope.plot_2_4.bitShift: 0
+Scope.plot_2_4.bitClip: false
+Scope.plot_2_4.experiment: RTAPPDEMO
+Scope.plot_2_4.num_shot: 1
+Scope.plot_2_4.num_expr: 2
+Scope.plot_2_4.continuous_update: 0
+Scope.plot_2_4.global_defaults: 261889
+Scope.plot_2_4.label_1: Error3
+Scope.plot_2_4.y_expr_1: \RTAPPDEMO::TOP.ERRORS:ERROR3
+Scope.plot_2_4.mode_1D_1_1: Line
+Scope.plot_2_4.mode_2D_1_1: xz(y)
+Scope.plot_2_4.color_1_1: 3
+Scope.plot_2_4.marker_1_1: 0
+Scope.plot_2_4.step_marker_1_1: 1
+Scope.plot_2_4.label_2: Control
+Scope.plot_2_4.y_expr_2: \RTAPPDEMO::TOP.CONTROLS:CONTROL3
+Scope.plot_2_4.mode_1D_2_1: Line
+Scope.plot_2_4.mode_2D_2_1: xz(y)
+Scope.plot_2_4.color_2_1: 7
+Scope.plot_2_4.marker_2_1: 0
+Scope.plot_2_4.step_marker_2_1: 1
+
+Scope.vpane_1: 250
+Scope.vpane_2: 500
+Scope.vpane_3: 750

@@ -10,7 +10,7 @@ do
         -d|--debug)
         DEBUG="$2"
         ;;
-        --mds)
+        -mds)
         MDS=1
         ;;
     esac
@@ -74,6 +74,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 if [ ${MDS} == 1 ]; then
 export rtappwriter_path=../Trees
 export rtappreader_path=../Trees
+export rtappdemo_path=../Trees
 mdstcl < CreateMDSTrees.tcl
 fi
 
