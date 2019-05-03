@@ -18,7 +18,7 @@ Install all the standard development tools and the cmake3 compiler:
 
  `yum -y groups install "Development Tools"`
 
- `yum -y install cmake3`
+ `yum -y install wget cmake3`
 
 Solving dependencies for MARTe2 and EPICS:
 
@@ -86,12 +86,10 @@ Finally compile MARTe2 Components (insert your own paths):
 Now everything should work correctly. 
 
 ### Official Docker Image
-If you prefer, we released a docker image based on CentOS 7 with all the settings needed for running the examples. Download here: https://link.com
+We released a docker image based on CentOS 7 with all the settings needed for running the examples. Download here: https://link.com
 
 Run a container with a virtual terminal session and interactive option:
 
- `docker run -it marte2-training /bin/bash`
+ `docker run -it marte2-training`
 
- `docker start <container id>`
-
- `docker attach <container id>`
+The image comes with all the environment variable already set up.
