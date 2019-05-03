@@ -1,34 +1,3 @@
-+EPICSCAInterface= {
-    Class = EPICS::EPICSCAClient
-	StackSize = 1048576
-	CPUs = 0x1
-    AutoStart = 0
-	+PV_STATUS = {
-		Class = EPICS::EPICSPV
-		PVName = "MARTE2-DEMO-APP:STATUS"
-		PVType = int32
-   	}    
-	+PV_COMMAND = {
-		Class = EPICS::EPICSPV
-		PVName = "MARTE2-DEMO-APP:COMMAND"
-		PVType = uint32
-		Event = {
-    		Destination = StateMachine
-    		PVValue = Function
-    		FunctionMap = {{"1", "GOTORUN"}, {"0", "GOTOIDLE"}}
-		}
-   	}
-	+PV_ERROR_RST = {
-		Class = EPICS::EPICSPV
-		PVName = "MARTE2-DEMO-APP:RESET"
-		PVType = uint32
-		Event = {
-    		Destination = StateMachine
-    		PVValue = Ignore
-    		Function = "RESET" 
-        }
-	}
-}
 +WebRoot = {
     Class = HttpObjectBrowser
     Root = "."
@@ -87,22 +56,6 @@
                 Function = "Start"
                 Mode = ExpectsReply
             }
-            +StartEPICSCAInterface = {
-                Class = Message
-                Destination = "EPICSCAInterface"
-                Mode = ExpectsReply
-                Function = "Start"
-            }
-            +OpenTreeMsg = {
-        		Class = Message
-        		Destination = "TestApp.Data.SignalsWriter"
-        		Function = OpenTree
-        		Mode = ExpectsReply
-        		+Parameters = {
-        			Class = ConfigurationDatabase
-        			param1 = 1
-        		}
-        	}
             +ChangeToStateIdleMsg = {
                 Class = Message
                 Destination = TestApp
@@ -128,7 +81,6 @@
             NextState = "RUN"
             NextStateError = "IDLE"
             Timeout = 0 
-            
             +ChangeToRunMsg = {
                 Class = Message
                 Destination = TestApp
@@ -202,8 +154,20 @@ $TestApp = {
                 }
                 ADC0_0 = {
                 	DataSource = NI6259_0_ADC
-                	Samples = 1000
-                	Frequency = 1000
+                	Samples = 125
+                	Frequency = 2000
+                }
+                ADC0_1 = {
+                	DataSource = NI6259_0_ADC
+                	Samples = 125
+                }
+                ADC0_2 = {
+                	DataSource = NI6259_0_ADC
+                	Samples = 125
+                }
+                ADC0_3 = {
+                	DataSource = NI6259_0_ADC
+                	Samples = 125
                 }
             }
             OutputSignals = {
@@ -218,7 +182,25 @@ $TestApp = {
                 ADC0_0 = {
                 	DataSource = DDB1
                 	Type = int16
-					NumberOfElements = 1000
+					NumberOfElements = 125
+					NumberOfDimensions = 1       	
+                }  
+                ADC0_1 = {
+                	DataSource = DDB1
+                	Type = int16
+					NumberOfElements = 125
+					NumberOfDimensions = 1       	
+                }  
+                ADC0_2 = {
+                	DataSource = DDB1
+                	Type = int16
+					NumberOfElements = 125
+					NumberOfDimensions = 1       	
+                }  
+                ADC0_3 = {
+                	DataSource = DDB1
+                	Type = int16
+					NumberOfElements = 125
 					NumberOfDimensions = 1       	
                 }  
             }
@@ -229,12 +211,45 @@ $TestApp = {
                 ADC0_0 = {
                     DataSource = DDB1
                     Type = int16
-                    NumberOfElements = 1000
+                    NumberOfElements = 125 
+                    Ranges = {{0, 0}}
+                }
+                ADC0_1 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125 
+                    Ranges = {{0, 0}}
+                }
+                ADC0_2 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125 
+                    Ranges = {{0, 0}}
+                }
+                ADC0_3 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125 
                     Ranges = {{0, 0}}
                 }
             }
             OutputSignals = {
                 ADC0_0_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 1
+                }
+                ADC0_1_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 1
+                }
+                ADC0_2_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 1
+                }
+                ADC0_3_0 = {
                     DataSource = DDB1
                     Type = int16
                     NumberOfElements = 1
@@ -248,9 +263,39 @@ $TestApp = {
                     DataSource = DDB1
                     Type = int16
                 }
+                ADC0_1_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                }
+                ADC0_2_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                }
+                ADC0_3_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                }
             }
             OutputSignals = {
                 ADC0_0_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                    NumberOfElements = 1
+                    Gain = 0.000305176
+                }
+                ADC0_1_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                    NumberOfElements = 1
+                    Gain = 0.000305176
+                }
+                ADC0_2_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                    NumberOfElements = 1
+                    Gain = 0.000305176
+                }
+                ADC0_3_0_f = {
                     DataSource = DDB1
                     Type = float32
                     NumberOfElements = 1
@@ -260,10 +305,10 @@ $TestApp = {
         }
         +GAMWF1 = {
             Class = WaveformGAM::WaveformSin
-            Amplitude = 0.01
+            Amplitude = 5.0
             Frequency = 1.0
             Phase = 0.0
-            Offset = 0.0
+            Offset = 1.1
             InputSignals = {
                 Time = {
                     DataSource = DDB1
@@ -354,27 +399,54 @@ $TestApp = {
             Class = IOGAM
             InputSignals = {
                 Time = {
-                	DataSource = DDB1
-                	Type = uint32
+                    DataSource = DDB1
+                    Type = uint32
                 }
-                ADC0_0 = {
-                	DataSource = DDB1
-                	Type = int16
-					NumberOfElements = 1000
-					NumberOfDimensions = 1       	
-                }  
+                DACReference = {
+                    DataSource = DDB1
+                    Type = float32
+                }
+                ADC0_0_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                }
+                ADC0_1_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                }
+                ADC0_2_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                }
+                ADC0_3_0_f = {
+                    DataSource = DDB1
+                    Type = float32
+                }
             }
             OutputSignals = {
                 Time = {
-                	DataSource = SignalsWriter
-                	Type = uint32
+                    DataSource = SignalsWriter
+                    Type = uint32
                 }
-                ADC0_0 = {
-                	DataSource = SignalsWriter
-                	Type = int16
-					NumberOfElements = 1000
-					NumberOfDimensions = 1       	
-                    Alias = Measurement0F
+                DACReference = {
+                    DataSource = SignalsWriter
+                    Type = float32
+                }
+                ADC0_0_0_f = {
+                    DataSource = SignalsWriter
+                    Type = float32
+                }
+                ADC0_1_0_f = {
+                    DataSource = SignalsWriter
+                    Type = float32
+                }
+                ADC0_2_0_f = {
+                    DataSource = SignalsWriter
+                    Type = float32
+                }
+                ADC0_3_0_f = {
+                    DataSource = SignalsWriter
+                    Type = float32
                 }
             }
         }
@@ -392,30 +464,34 @@ $TestApp = {
             Class = TimingDataSource
         }
         +SignalsWriter = {
-        	Class = MDSWriter::MDSWriter
-			NumberOfBuffers = 120000
-        	CPUMask = 0x1
-        	StackSize = 10000000
-        	TreeName = "rtappdemo"
-        	StoreOnTrigger = 0
-        	NumberOfPreTriggers = 0
-			NumberOfPostTriggers = 0
-            EventName = "IgnoreMe"
-        	TimeRefresh = 5
-			Signals = {
-				Time = {
-					SignalType = uint32
-					TimeSignal = 1
-				}
-				Measurement0F = {
-        			NodeName = "INP.MEAS0F"
-        			Period = 1e-6
-        			MakeSegmentAfterNWrites = 50
-        			DecimatedNodeName = "INP.MEAS0FD"
-        			MinMaxResampleFactor = 1000
-        			SamplePhase = 0
-        			AutomaticSegmentation = 0
-        		}
+            Class = FileDataSource::FileWriter
+            NumberOfBuffers = 10000
+            CPUMask = 1 
+            StackSize = 10000000
+            Filename = "/tmp/RTApp-NI6259-1.csv" 
+            Overwrite = "yes" 
+            FileFormat = "csv"
+            CSVSeparator = "," 
+            StoreOnTrigger = 0 
+            Signals = {
+                Time = { 
+                    Type = "uint32"
+                }
+                DACReference = {
+                    Type = "float32"
+                } 
+                ADC0_0_0_f = {
+                    Type = "float32"
+                }
+                ADC0_1_0_f = {
+                    Type = "float32"
+                }
+                ADC0_2_0_f = {
+                    Type = "float32"
+                }
+                ADC0_3_0_f = {
+                    Type = "float32"
+                }
             }
         }
         +PerformanceWriter = {
@@ -474,7 +550,7 @@ $TestApp = {
             		InputPolarity = Bipolar
             		InputMode = RSE
             	}
-            	/*ADC0_1 = {
+            	ADC0_1 = {
             		InputRange = 10
             		Type = int16
             		ChannelId = 1
@@ -494,7 +570,7 @@ $TestApp = {
             		ChannelId = 3
             		InputPolarity = Bipolar
             		InputMode = RSE
-            	}*/
+            	}
             }
         }
         +NI6259_0_DAC = {

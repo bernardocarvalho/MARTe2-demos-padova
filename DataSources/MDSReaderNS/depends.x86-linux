@@ -89,12 +89,6 @@
  /usr/local/mdsplus/include/mdsplus/numeric_cast.hpp \
  /usr/local/mdsplus/include/mdsplus/Traits.hpp \
  /usr/local/mdsplus/include/mdsplus/AutoPointer.hpp \
- /usr/local/mdsplus/include/mdsdescrip.h \
- /usr/local/mdsplus/include/status.h \
- /usr/local/mdsplus/include/mdsshr_messages.h \
- /usr/local/mdsplus/include/dtypedef.h \
- /usr/local/mdsplus/include/classdef.h \
- /usr/local/mdsplus/include/opcbuiltins.h \
  /home/aneto/Projects/MARTe2-dev//Source/Core/BareMetal/L5GAMs/DataSourceI.h \
  /home/aneto/Projects/MARTe2-dev//Source/Core/BareMetal/L4Configuration/ConfigurationDatabase.h \
  /home/aneto/Projects/MARTe2-dev//Source/Core/BareMetal/L4Configuration/AnyObject.h \
