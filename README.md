@@ -1,4 +1,4 @@
-# MARTe2 Training Demo Repository:w
+# MARTe2 Training Demo Repository
 
 Respository containing all the demos for MARTe2 Training Session
 ## Setting up environment
@@ -103,6 +103,8 @@ Finally compile MARTe2 Components (insert your own paths):
  `export EPICSPVA=~/Projects/EPICS/base-7.0-dev`
 
  `export EPICS_HOST_ARCH=linux-x86_64`
+
+ `export PATH=$PATH:$EPICS_BASE/bin/$EPICS_HOST_ARCH`
 
  `export SDN_CORE_INCLUDE_DIR=~/Projects/SDN_1.0.12_nonCCS/src/main/c++/include/`
 

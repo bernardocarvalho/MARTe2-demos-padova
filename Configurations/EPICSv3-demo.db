@@ -13,6 +13,11 @@ record( longin, "MARTE2-DEMO-APP:RESET")
    field(DTYP, "Soft Channel")
 }
 
+record( ai, "MARTE2-DEMO-APP:MEASUREMENT0")
+{
+   field(DTYP, "Soft Channel")
+}
+
 record( waveform, "MARTE2-DEMO-APP:HIST-IDLE-CT")
 {
    field(DTYP, "Soft Channel")
