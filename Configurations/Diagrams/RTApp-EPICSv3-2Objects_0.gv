@@ -1,0 +1,9 @@
+digraph G {
+bgcolor=white
+subgraph cluster_EPICSCAInterface {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">EPICSCAInterface <BR/>(EPICS::EPICSCAClient)</font></TD></TR></TABLE>>
+EPICSCAInterfacePV_STATUS [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">PV_STATUS <BR/>(EPICS::EPICSPV)</font></TD></TR></TABLE>>]
+EPICSCAInterfacePV_COMMAND [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">PV_COMMAND <BR/>(EPICS::EPICSPV)</font></TD></TR></TABLE>>]
+EPICSCAInterfacePV_ERROR_RST [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">PV_ERROR_RST <BR/>(EPICS::EPICSPV)</font></TD></TR></TABLE>>]
+}
+}

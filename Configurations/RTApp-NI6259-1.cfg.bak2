@@ -153,21 +153,21 @@ $TestApp = {
                     Type = uint32
                 }
                 ADC0_0 = {
-                	DataSource = NI6259_0_ADC
-                	Samples = 125
-                	Frequency = 2000
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
+                    Frequency = 2000
                 }
                 ADC0_1 = {
-                	DataSource = NI6259_0_ADC
-                	Samples = 125
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
                 }
                 ADC0_2 = {
-                	DataSource = NI6259_0_ADC
-                	Samples = 125
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
                 }
                 ADC0_3 = {
-                	DataSource = NI6259_0_ADC
-                	Samples = 125
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
                 }
             }
             OutputSignals = {
@@ -180,28 +180,28 @@ $TestApp = {
                     Type = uint32                   
                 }
                 ADC0_0 = {
-                	DataSource = DDB1
-                	Type = int16
-					NumberOfElements = 125
-					NumberOfDimensions = 1       	
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
                 }  
                 ADC0_1 = {
-                	DataSource = DDB1
-                	Type = int16
-					NumberOfElements = 125
-					NumberOfDimensions = 1       	
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
                 }  
                 ADC0_2 = {
-                	DataSource = DDB1
-                	Type = int16
-					NumberOfElements = 125
-					NumberOfDimensions = 1       	
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
                 }  
                 ADC0_3 = {
-                	DataSource = DDB1
-                	Type = int16
-					NumberOfElements = 125
-					NumberOfDimensions = 1       	
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
                 }  
             }
         }
@@ -346,26 +346,26 @@ $TestApp = {
                     DataSource = DDB1
                     Type = uint32
                 }
-                Idle_Thread1_CycleTime = {                	
+                Idle_Thread1_CycleTime = {                  
                     DataSource = Timings
                     Alias = "Idle.Thread1_CycleTime"
-                    Type = uint32         	
+                    Type = uint32           
                 }
                 GAMADC_ReadTime = {
                     DataSource = Timings
-                    Type = uint32         	
+                    Type = uint32           
                 } 
                 GAMADC_ExecTime = {
                     DataSource = Timings
-                    Type = uint32         	
+                    Type = uint32           
                 }
                 GAMADC_WriteTime = {
                     DataSource = Timings
-                    Type = uint32         	
+                    Type = uint32           
                 }
                 GAMPerformanceWriter_WriteTime= {
                     DataSource = Timings
-                    Type = uint32         	
+                    Type = uint32           
                 }
             }
             OutputSignals = {
@@ -373,25 +373,25 @@ $TestApp = {
                     DataSource = PerformanceWriter
                     Type = uint32
                 }
-                Idle_Thread1_CycleTime = {                	
+                Idle_Thread1_CycleTime = {                  
                     DataSource = PerformanceWriter
-                    Type = uint32         	
+                    Type = uint32           
                 }
                 GAMADC_ReadTime = {
                     DataSource = PerformanceWriter 
-                    Type = uint32         	
+                    Type = uint32           
                 } 
                 GAMADC_ExecTime = {
                     DataSource = PerformanceWriter
-                    Type = uint32         	
+                    Type = uint32           
                 }
                 GAMADC_WriteTime = {
                     DataSource = PerformanceWriter
-                    Type = uint32         	
+                    Type = uint32           
                 }
                 GAMPerformanceWriter_WriteTime= {
                     DataSource = PerformanceWriter
-                    Type = uint32         	
+                    Type = uint32           
                 }
             }
         }
@@ -534,43 +534,43 @@ $TestApp = {
             ClockSampleSource = "SI_TC"
             ClockSamplePolarity = "ACTIVE_HIGH_OR_RISING_EDGE"
             ClockConvertSource = "SI2TC"
-			ClockConvertPolarity = "RISING_EDGE"
+            ClockConvertPolarity = "RISING_EDGE"
             CPUs = 0x2
             Signals = {
-            	Counter = {
-            		Type = uint32
-            	}
+                Counter = {
+                    Type = uint32
+                }
                 Time = {
-                	Type = uint32
-            	}
-            	ADC0_0 = {
-            		InputRange = 10
-            		Type = int16
-            		ChannelId = 0
-            		InputPolarity = Bipolar
-            		InputMode = RSE
-            	}
-            	ADC0_1 = {
-            		InputRange = 10
-            		Type = int16
-            		ChannelId = 1
-            		InputPolarity = Bipolar
-            		InputMode = RSE
-            	}
-            	ADC0_2 = {
-            		InputRange = 10
-            		Type = int16
-            		ChannelId = 2
-            		InputPolarity = Bipolar
-            		InputMode = RSE
-            	}
-            	ADC0_3 = {
-            		InputRange = 10
-            		Type = int16
-            		ChannelId = 3
-            		InputPolarity = Bipolar
-            		InputMode = RSE
-            	}
+                    Type = uint32
+                }
+                ADC0_0 = {
+                    InputRange = 10
+                    Type = int16
+                    ChannelId = 0
+                    InputPolarity = Bipolar
+                    InputMode = RSE
+                }
+                ADC0_1 = {
+                    InputRange = 10
+                    Type = int16
+                    ChannelId = 1
+                    InputPolarity = Bipolar
+                    InputMode = RSE
+                }
+                ADC0_2 = {
+                    InputRange = 10
+                    Type = int16
+                    ChannelId = 2
+                    InputPolarity = Bipolar
+                    InputMode = RSE
+                }
+                ADC0_3 = {
+                    InputRange = 10
+                    Type = int16
+                    ChannelId = 3
+                    InputPolarity = Bipolar
+                    InputMode = RSE
+                }
             }
         }
         +NI6259_0_DAC = {
@@ -578,13 +578,13 @@ $TestApp = {
             DeviceName = "/dev/pxi6259"
             BoardId = 0
             ClockUpdateSource = "UI_TC"
-        	ClockUpdatePolarity = "RISING_EDGE"
+            ClockUpdatePolarity = "RISING_EDGE"
             Signals = {
-            	DAC0_0 = {
-            		Type = float32
-            		ChannelId = 0
-            		OutputPolarity = Bipolar            		
-            	} 
+                DAC0_0 = {
+                    Type = float32
+                    ChannelId = 0
+                    OutputPolarity = Bipolar                    
+                } 
             }
         }
     }

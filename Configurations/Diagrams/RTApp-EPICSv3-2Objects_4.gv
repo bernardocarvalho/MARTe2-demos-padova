@@ -1,0 +1,54 @@
+digraph G {
+bgcolor=white
+subgraph cluster_TestApp {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">TestApp <BR/>(RealTimeApplication)</font></TD></TR></TABLE>>
+subgraph cluster_TestAppFunctions {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Functions <BR/>(ReferenceContainer)</font></TD></TR></TABLE>>
+TestAppFunctionsGAMTimer [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMTimer <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMMeasurements [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMMeasurements <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMRef0 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef0 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMRef1 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef1 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMRef2 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef2 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMRef3 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef3 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMHistogramCycleTimes [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMHistogramCycleTimes <BR/>(HistogramGAM)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMSSM [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSSM <BR/>(SSMGAM)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMPerformanceWriter [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPerformanceWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+TestAppFunctionsGAMSignalsWriter [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSignalsWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+}
+subgraph cluster_TestAppData {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Data <BR/>(ReferenceContainer)</font></TD></TR></TABLE>>
+TestAppDataDDB1 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+TestAppDataLoggerDataSource [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+TestAppDataTimings [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+TestAppDataTimer [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Timer <BR/>(LinuxTimer)</font></TD></TR></TABLE>>]
+TestAppDataSignalsWriter [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">SignalsWriter <BR/>(FileDataSource::FileWriter)</font></TD></TR></TABLE>>]
+TestAppDataPerformanceWriter [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">PerformanceWriter <BR/>(FileDataSource::FileWriter)</font></TD></TR></TABLE>>]
+TestAppDataEPICSCAOutput [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">EPICSCAOutput <BR/>(EPICSCA::EPICSCAOutput)</font></TD></TR></TABLE>>]
+}
+subgraph cluster_TestAppStates {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">States <BR/>(ReferenceContainer)</font></TD></TR></TABLE>>
+subgraph cluster_TestAppStatesIdle {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Idle <BR/>(RealTimeState)</font></TD></TR></TABLE>>
+subgraph cluster_TestAppStatesIdleThreads {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Threads <BR/>(ReferenceContainer)</font></TD></TR></TABLE>>
+TestAppStatesIdleThreadsThread1 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Thread1 <BR/>(RealTimeThread)</font></TD></TR></TABLE>>]
+}
+}
+subgraph cluster_TestAppStatesRun {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Run <BR/>(RealTimeState)</font></TD></TR></TABLE>>
+subgraph cluster_TestAppStatesRunThreads {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Threads <BR/>(ReferenceContainer)</font></TD></TR></TABLE>>
+TestAppStatesRunThreadsThread1 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Thread1 <BR/>(RealTimeThread)</font></TD></TR></TABLE>>]
+}
+}
+subgraph cluster_TestAppStatesError {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Error <BR/>(RealTimeState)</font></TD></TR></TABLE>>
+subgraph cluster_TestAppStatesErrorThreads {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Threads <BR/>(ReferenceContainer)</font></TD></TR></TABLE>>
+TestAppStatesErrorThreadsThread1 [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Thread1 <BR/>(RealTimeThread)</font></TD></TR></TABLE>>]
+}
+}
+}
+TestAppScheduler [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">Scheduler <BR/>(GAMScheduler)</font></TD></TR></TABLE>>]
+}
+}

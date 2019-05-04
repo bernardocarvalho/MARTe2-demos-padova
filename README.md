@@ -35,13 +35,15 @@ Install MDSplus
 
  `yum -y install mdsplus-kernel* mdsplus-java* mdsplus-python* mdsplus-devel*`
 
-Create a folder named Projects and clone MARTe2 Core and MARTe2 components with git:
+Create a folder named Projects and clone MARTe2 Core,  MARTe2 components and the MARTe2 demos:
 
  `mkdir ~/Projects`
 
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2.git MARTe2-dev`
 
  `git clone -b #351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
+ 
+ `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-demos-padova.git'
 
 Download EPICS R70.2:
 
@@ -67,12 +69,6 @@ Start building the open62541 library:
  `cmake3 ..`
 
  `make`
-
-Compile MARTe2:
-
- `cd ../../MARTe2-dev`
-
- `make -f Makefile.x86-linux`
 
 Compile EPICS:
 
@@ -124,7 +120,9 @@ Export all variables permanently (assumes that the relative paths above were use
 Now everything should work correctly. 
 
 ## Docker 
-In the root folder of this project there is a Dockerfile that you can build and use.
+
+In the root folder of this project there is a Dockerfile which includes all the demo dependencies.
+
  `cd ~/Projects/MARTe2-demos-padova`
 
  `docker build .`
@@ -134,7 +132,7 @@ Note that you need to map your local Projects directory with the /root/Projects 
 To execute the image with your host folder mapped into the container, just run:
  `cd ~/Projects`
 
- `docker run -it -w /root/Projects -v ~/Projects:/root/Projects:Z DOCKER_IMAGE_ID`
+ `docker run -it -e DISPLAY=$DISPLAY -w /root/Projects -v ~/Projects:/root/Projects:Z -v /tmp/.X11-unix:/tmp/.X11-unix DOCKER_IMAGE_ID`
 
 ## Compilings the MARTe and the examples
 

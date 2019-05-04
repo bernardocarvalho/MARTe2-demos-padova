@@ -1,0 +1,49 @@
+digraph G {
+rankdir=LR
+concentrate=true
+"Run.Thread1.GAMTimer" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMTimer <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMMeasurements" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMMeasurements <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMRef0" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef0 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMRef1" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef1 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMRef2" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef2 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMRef3" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef3 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMSSM" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSSM <BR/>(SSMGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSignalsWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMPerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPerformanceWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMHistogramCycleTimes" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMHistogramCycleTimes <BR/>(HistogramGAM)</font></TD></TR></TABLE>>]
+subgraph cluster_Run {
+label = "State: Run"
+subgraph cluster_Run_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Run.Thread1.GAMTimer"->"Run.Thread1.GAMMeasurements"->"Run.Thread1.GAMRef0"->"Run.Thread1.GAMRef1"->"Run.Thread1.GAMRef2"->"Run.Thread1.GAMRef3"->"Run.Thread1.GAMSSM"->"Run.Thread1.GAMSignalsWriter"->"Run.Thread1.GAMPerformanceWriter"->"Run.Thread1.GAMHistogramCycleTimes"
+}
+}
+"+DDB1" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+"+LoggerDataSource" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+"+Timings" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+"+Timer" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timer <BR/>(LinuxTimer)</font></TD></TR></TABLE>>]
+"+PerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+PerformanceWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+SignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SignalsWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+Timer"->"Run.Thread1.GAMTimer"
+"+Timings"->"Run.Thread1.GAMTimer"
+"Run.Thread1.GAMTimer"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMMeasurements"
+"Run.Thread1.GAMMeasurements"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMRef0"
+"Run.Thread1.GAMRef0"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMRef1"
+"Run.Thread1.GAMRef1"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMRef2"
+"Run.Thread1.GAMRef2"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMRef3"
+"Run.Thread1.GAMRef3"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMSSM"
+"Run.Thread1.GAMSSM"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMSignalsWriter"
+"Run.Thread1.GAMSignalsWriter"->"+SignalsWriter"
+"+DDB1"->"Run.Thread1.GAMPerformanceWriter"
+"Run.Thread1.GAMPerformanceWriter"->"+PerformanceWriter"
+"+DDB1"->"Run.Thread1.GAMHistogramCycleTimes"
+"Run.Thread1.GAMHistogramCycleTimes"->"+DDB1"
+}
