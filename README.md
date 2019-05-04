@@ -19,9 +19,9 @@ Install all the standard development tools, the cmake3 compiler and octave:
 
  `yum -y groups install "Development Tools"`
 
- `yum -y install wget cmake3 octave`
+ `yum -y install wget cmake3 octave libxml2 libxml2-devel bc`
 
-Solving dependencies for MARTe2 and EPICS:
+Solve dependencies for MARTe2 and EPICS:
 
  `yum -y install ncurses-devel readline-devel`
 
@@ -35,7 +35,7 @@ Install MDSplus
 
  `yum -y install mdsplus-kernel* mdsplus-java* mdsplus-python* mdsplus-devel*`
 
-Now craete a folder named Projects and clone MARTe2 Core and MARTe2 components with git:
+Create a folder named Projects and clone MARTe2 Core and MARTe2 components with git:
 
  `mkdir ~/Projects`
 
@@ -43,14 +43,10 @@ Now craete a folder named Projects and clone MARTe2 Core and MARTe2 components w
 
  `git clone -b #351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
 
-Download EPICS and move it to /opt/EPICS directory:
+Download EPICS R70.2:
 
- `git clone -b R7.0.2.2 https://github.com/epics-base/epics-base.git`
+ `git clone -b R7.0.2 --recursive https://github.com/epics-base/epics-base.git epics-base-7.0.2`
 
- `mkdir EPICS`
-
- `mv epics-base EPICS/base-7.0-dev`
- 
 Clone open62541 v0.3 library:
 
  `git clone -b 0.3 https://github.com/open62541/open62541.git`
@@ -80,7 +76,9 @@ Compile MARTe2:
 
 Compile EPICS:
 
- `cd ~/Projects/EPICS/base-7.0-dev`
+ `cd ~/Projects/epics-base-7.0.2`
+
+ `echo "OP_SYS_CXXFLAGS += -std=c++11" >> configure/os/CONFIG_SITE.linux-x86_64.Common`
 
  `make`
 
@@ -98,9 +96,9 @@ Finally compile MARTe2 Components (insert your own paths):
 
  `export OPEN62541_INCLUDE=~/Projects/open62541/build`
 
- `export EPICS_BASE=~/Projects/EPICS/base-7.0-dev`
+ `export EPICS_BASE=~/Projects/epics-base-7.0.2`
 
- `export EPICSPVA=~/Projects/EPICS/base-7.0-dev`
+ `export EPICSPVA=~/Projects/epics-base-7.0.2`
 
  `export EPICS_HOST_ARCH=linux-x86_64`
 
@@ -109,6 +107,8 @@ Finally compile MARTe2 Components (insert your own paths):
  `export SDN_CORE_INCLUDE_DIR=~/Projects/SDN_1.0.12_nonCCS/src/main/c++/include/`
 
  `export SDN_CORE_LIBRARY_DIR=~/Projects/SDN_1.0.12_nonCCS/target/lib/`
+
+ `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MARTe2_DIR/Build/x86-linux/Core/:$EPICS_BASE/lib/$EPICS_HOST_ARCH:$SDN_CORE_LIBRARY_DIR`
  
  `cd ~/Projects/MARTe2-components`
 
@@ -123,13 +123,29 @@ Export all variables permanently (assumes that the relative paths above were use
 
 Now everything should work correctly. 
 
-## Official Docker Image
-We released a docker image based on CentOS 7 with all the settings needed for running the examples. Download here: https://link.com
+## Docker 
+In the root folder of this project there is a Dockerfile that you can build and use.
+ `cd ~/Projects/MARTe2-demos-padova`
+
+ `docker build .`
+
+Note that you need to map your local Projects directory with the /root/Projects directory in the container.
 
 To execute the image with your host folder mapped into the container, just run:
+ `cd ~/Projects`
 
- `cd ~/Projects
+ `docker run -it -w /root/Projects -v ~/Projects:/root/Projects:Z DOCKER_IMAGE_ID`
 
- `docker run -it -v $(pwd):/root/Projects:Z marte2-training`
+## Compilings the MARTe and the examples
 
-The image comes with all the environment variable already set up.
+ `cd ~/Projects/MARTe2-dev`
+
+ `make -f Makefile.linux`
+
+ `cd ~/Projects/MARTe2-components`
+
+ `make -f Makefile.linux`
+
+ `cd ~/Projects/MARTe2-demos-padova`
+
+ `make -f Makefile.x86-linux`
