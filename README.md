@@ -1,10 +1,15 @@
 # MARTe2 Training Demo Repository
 
-Respository containing all the demos for MARTe2 Training Session
+Repository containing all the demos for MARTe2 Training Session
+
 ## Setting up environment
-In this tutorial it is assumed that a clean CentOS 7 installation is being used (https://www.centos.org/download/).
+
+It is assumed that a clean CentOS 7 installation is being used (https://www.centos.org/download/).
+
+Alternatively, there is also a Dockerfile available (see below).
 
 ### Download all the needed software
+
 Open a terminal, install epel repository and update the distribution:
 
  `yum -y install epel-release`
@@ -86,7 +91,7 @@ Compile SDN:
 
  `make`
 
-## Docker 
+## Docker (optional)
 
 In the root folder of this project there is a Dockerfile which includes all the demo dependencies.
 
