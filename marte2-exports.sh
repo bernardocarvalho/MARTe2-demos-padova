@@ -1,4 +1,5 @@
 export MARTe2_DIR=~/Projects/MARTe2-dev
+export MARTe2_Components_DIR=~/Projects/MARTe2-components
 export OPEN62541_LIB=~/Projects/open62541/build/bin
 export OPEN62541_INCLUDE=~/Projects/open62541/build
 export EPICS_BASE=~/Projects/epics-base-7.0.2
