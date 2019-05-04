@@ -118,6 +118,9 @@ Disable firewall rules (otherwise the communication with EPICS may not work):
 
  `iptable -F`
 
+Export all variables permanently (assumes that the relative paths above were used!).
+ `cp marte2-exports.sh /etc/profile.d/`
+
 Now everything should work correctly. 
 
 ## Official Docker Image
