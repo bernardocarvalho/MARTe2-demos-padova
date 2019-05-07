@@ -1,0 +1,4 @@
+digraph G {
+bgcolor=white
+WebServer [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">WebServer <BR/>(HttpService)</font></TD></TR></TABLE>>]
+}

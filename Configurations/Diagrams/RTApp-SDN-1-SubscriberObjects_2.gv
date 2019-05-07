@@ -1,0 +1,8 @@
+digraph G {
+bgcolor=white
+subgraph cluster_EPICSPVADB {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">EPICSPVADB <BR/>(EPICSPVA::EPICSPVADatabase)</font></TD></TR></TABLE>>
+EPICSPVADBDemoAppStatistics [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">DemoAppStatistics <BR/>(EPICSPVA::EPICSPVARecord)</font></TD></TR></TABLE>>]
+EPICSPVADBDemoAppSignals [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">DemoAppSignals <BR/>(EPICSPVA::EPICSPVARecord)</font></TD></TR></TABLE>>]
+}
+}

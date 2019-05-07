@@ -1,0 +1,14 @@
+digraph G {
+bgcolor=white
+subgraph cluster_WebRoot {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">WebRoot <BR/>(HttpObjectBrowser)</font></TD></TR></TABLE>>
+WebRootObjectBrowse [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">ObjectBrowse <BR/>(HttpObjectBrowser)</font></TD></TR></TABLE>>]
+WebRootResourcesHtml [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">ResourcesHtml <BR/>(HttpDirectoryResource)</font></TD></TR></TABLE>>]
+subgraph cluster_WebRootHttpMessageInterface {
+label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">HttpMessageInterface <BR/>(HttpMessageInterface)</font></TD></TR></TABLE>>
+WebRootHttpMessageInterfaceGOTOIDLE [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GOTOIDLE <BR/>(Message)</font></TD></TR></TABLE>>]
+WebRootHttpMessageInterfaceGOTORUN [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GOTORUN <BR/>(Message)</font></TD></TR></TABLE>>]
+WebRootHttpMessageInterfaceGOTOERR [margin=0, shape=box, style=filled, fillcolor=white, color=black,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GOTOERR <BR/>(Message)</font></TD></TR></TABLE>>]
+}
+}
+}

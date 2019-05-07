@@ -1,0 +1,21 @@
+digraph G {
+rankdir=LR
+concentrate=true
+"Error.Thread1.GAMTimer" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMTimer <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+subgraph cluster_Error {
+label = "State: Error"
+subgraph cluster_Error_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Error.Thread1.GAMTimer"
+}
+}
+"+DDB1" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+"+LoggerDataSource" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+"+Timings" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+"+Timer" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timer <BR/>(LinuxTimer)</font></TD></TR></TABLE>>]
+"+SDNPub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPub <BR/>(SDN::SDNPublisher)</font></TD></TR></TABLE>>]
+"+Timer"->"Error.Thread1.GAMTimer"
+"+Timings"->"Error.Thread1.GAMTimer"
+"Error.Thread1.GAMTimer"->"+DDB1"
+}

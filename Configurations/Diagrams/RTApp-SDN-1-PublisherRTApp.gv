@@ -1,0 +1,35 @@
+digraph G {
+rankdir=LR
+concentrate=true
+"Idle.Thread1.GAMTimer" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMTimer <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMRef0" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef0 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMRef1" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef1 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMRef2" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef2 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMRef3" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMRef3 <BR/>(WaveformGAM::WaveformSin)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMSDNPublisher" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSDNPublisher <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Error.Thread1.GAMTimer" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMTimer <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+subgraph cluster_Idle {
+label = "State: Idle"
+subgraph cluster_Idle_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Idle.Thread1.GAMTimer"->"Idle.Thread1.GAMRef0"->"Idle.Thread1.GAMRef1"->"Idle.Thread1.GAMRef2"->"Idle.Thread1.GAMRef3"->"Idle.Thread1.GAMSDNPublisher"
+}
+}
+subgraph cluster_Error {
+label = "State: Error"
+subgraph cluster_Error_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Error.Thread1.GAMTimer"
+}
+}
+subgraph cluster_DataSources {
+label = "Data Sources"
+"+DDB1" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+"+LoggerDataSource" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+"+Timings" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+"+Timer" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timer <BR/>(LinuxTimer)</font></TD></TR></TABLE>>]
+"+SDNPub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPub <BR/>(SDN::SDNPublisher)</font></TD></TR></TABLE>>]
+}
+}
