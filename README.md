@@ -36,7 +36,7 @@ Install Python and Perl Parse utilities for open62541:
 
 Install MDSplus
 
- `yum -y install http://www.mdsplus.org/dist/el6/stable/RPMS/noarch/mdsplus-repo-7.50-0.el6.noarch.rpm`
+ `yum -y install http://www.mdsplus.org/dist/el7/stable/RPMS/noarch/mdsplus-repo-7.50-0.el7.noarch.rpm`
 
  `yum -y install mdsplus-kernel* mdsplus-java* mdsplus-python* mdsplus-devel*`
 
