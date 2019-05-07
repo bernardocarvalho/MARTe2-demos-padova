@@ -1,0 +1,10 @@
+digraph G {
+rankdir=TD
+nodesep=2.5
+"INITIAL" [margin=0, style=filled, fillcolor=white, color=red,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">INITIAL</font></TD></TR></TABLE>>]
+"IDLE" [margin=0, style=filled, fillcolor=white, color=red,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">IDLE</font></TD></TR></TABLE>>]
+"ERROR" [margin=0, style=filled, fillcolor=white, color=red,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">ERROR</font></TD></TR><TR><TD><font point-size="12"> / ENTER </font></TD></TR><TR><TD><font point-size="12">1. ChangeToErrorMsg <BR/>2. StopCurrentStateExecutionMsg <BR/>3. StartNextStateExecutionMsg <BR/></font></TD></TR></TABLE>>]
+"INITIAL"->"IDLE" [label= <<TABLE border="0" cellborder="0"><TR><TD ROWSPAN="2"><font point-size="12">START</font></TD><TD ALIGN="CENTER" ROWSPAN="2"><font point-size="12"> / </font></TD><TD ALIGN="LEFT"><font point-size="12">1. ChangeToStateIdleMsg </font></TD></TR><TR><TD ALIGN="LEFT"><font point-size="12">2. StartNextStateExecutionMsg </font></TD></TR></TABLE>>]
+"IDLE"->"IDLE" [label= <<TABLE border="0" cellborder="0"><TR><TD ROWSPAN="3"><font point-size="12">GOTOIDLE</font></TD><TD ALIGN="CENTER" ROWSPAN="3"><font point-size="12"> / </font></TD><TD ALIGN="LEFT"><font point-size="12">1. ChangeToIdleMsg </font></TD></TR><TR><TD ALIGN="LEFT"><font point-size="12">2. StopCurrentStateExecutionMsg </font></TD></TR><TR><TD ALIGN="LEFT"><font point-size="12">3. StartNextStateExecutionMsg </font></TD></TR></TABLE>>]
+"ERROR"->"IDLE" [label= <<TABLE border="0" cellborder="0"><TR><TD ROWSPAN="3"><font point-size="12">GOTOIDLE</font></TD><TD ALIGN="CENTER" ROWSPAN="3"><font point-size="12"> / </font></TD><TD ALIGN="LEFT"><font point-size="12">1. ChangeToIdleMsg </font></TD></TR><TR><TD ALIGN="LEFT"><font point-size="12">2. StopCurrentStateExecutionMsg </font></TD></TR><TR><TD ALIGN="LEFT"><font point-size="12">3. StartNextStateExecutionMsg </font></TD></TR></TABLE>>]
+}

@@ -165,5 +165,21 @@ bool FixedGAMExample1::Execute() {
     return true;
 }
 
+
+bool FixedGAMExample1::ExportData(MARTe::StructuredDataI & data) {
+    using namespace MARTe;
+    bool ok = GAM::ExportData(data);
+    if (ok) {
+        ok = data.CreateRelative("Parameters");
+    }
+    if (ok) {
+        ok = data.Write("Gain", gain);
+    }
+    if (ok) {
+        ok = data.MoveToAncestor(1u);
+    }
+    return ok;
+}
+
 CLASS_REGISTER(FixedGAMExample1, "")
 }

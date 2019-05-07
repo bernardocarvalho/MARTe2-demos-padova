@@ -36,7 +36,7 @@ Install Python and Perl Parse utilities for open62541:
 
 Install MDSplus
 
- `yum -y install http://www.mdsplus.org/dist/el6/stable/RPMS/noarch/mdsplus-repo-7.50-0.el6.noarch.rpm`
+ `yum -y install http://www.mdsplus.org/dist/el7/stable/RPMS/noarch/mdsplus-repo-7.50-0.el7.noarch.rpm`
 
  `yum -y install mdsplus-kernel* mdsplus-java* mdsplus-python* mdsplus-devel*`
 
@@ -48,7 +48,7 @@ Create a folder named Projects and clone MARTe2 Core,  MARTe2 components and the
 
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2.git MARTe2-dev`
 
- `git clone -b #351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
+ `git clone -b \#351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
  
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-demos-padova.git`
 
