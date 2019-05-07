@@ -48,7 +48,7 @@ Create a folder named Projects and clone MARTe2 Core,  MARTe2 components and the
 
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2.git MARTe2-dev`
 
- `git clone -b #351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
+ `git clone -b \#351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
  
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-demos-padova.git'
 
