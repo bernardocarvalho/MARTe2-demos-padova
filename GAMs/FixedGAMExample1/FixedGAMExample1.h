@@ -101,6 +101,11 @@ public:
      */
     virtual bool Execute();
 
+    /**
+     * @brief Export information about the component
+     */
+    virtual bool ExportData(MARTe::StructuredDataI & data);
+
 private:
 
     /**
