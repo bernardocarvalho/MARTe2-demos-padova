@@ -1,0 +1,104 @@
+#+======================================================================
+#
+# The NI-RIO driver.
+# Author: Anze Zagar (Cosylab)
+# Copyright (C) 2010-2015 ITER Organization
+#
+# This file is subject to the terms and conditions of the GNU General Public
+# License.  See the file COPYING in the main directory of the Linux
+# distribution for more details.
+#
+#+======================================================================
+
+# ======================================================================
+# UNIT SPECIFIC SETTINGS
+# ======================================================================
+
+# List of examples to build (source files)
+EXAMPLES := Example1.c
+
+# List of library dependencies (at least kernel module user library)
+LIBRARIES := NiFpga
+
+
+# ======================================================================
+# ADDITIONAL SETTINGS --- AVOID USING THESE (FIX UNIT STRUCTURE INSTEAD)
+# ======================================================================
+
+# Additional include directories
+#INCLUDE_DIRS :=
+
+# Additional library directories
+#LIBRARY_DIRS :=
+
+
+# ======================================================================
+# UNIT SPECIFIC COMPILER AND LINKER FLAGS
+# ======================================================================
+
+# Optimized release builds (default)
+CFLAGS_RELEASE := -fPIC -Wall -Wextra -O3
+LDFLAGS_RELEASE := -Wall
+
+# Debug builds (make debug)
+CFLAGS_DEBUG := -fPIC -Wall -Wextra -O0 -rdynamic -g -DDEBUG
+LDFLAGS_DEBUG := -Wall -g
+
+
+# ======================================================================
+# GENERIC BUILD RULES --- DO NOT MODIFY
+# ======================================================================
+
+# Sources
+sources := $(EXAMPLES)
+include_dirs := . /opt/codac/include $(INCLUDE_DIRS)
+
+# Binaries
+alltargets := $(basename $(sources))
+
+# Library dependencies
+
+
+library_dirs := /opt/codac-5.4/lib $(LIBRARY_DIRS)
+library_dirs := /opt/codac-5.4/lib $(LIBRARY_DIRS)
+libraries := pthread $(LIBRARIES)
+
+# Compiler/linker flags
+CFLAGS := $(include_dirs:%=-I"%")
+LDFLAGS := $(library_dirs:%=-L"%") $(libraries:%=-l%)
+CC := $(if $(findstring .cpp, $(sources)), $(CXX), $(CC))
+
+# Colors
+BOLD=\e[1m
+NC=\e[0m
+
+# Rules
+.PHONY: .depend all release debug clean
+
+all: release
+
+release: CFLAGS += $(CFLAGS_RELEASE)
+release: LDFLAGS += $(LDFLAGS_RELEASE)
+release: .depend $(alltargets)
+
+debug: CFLAGS += $(CFLAGS_DEBUG)
+debug: LDFLAGS += $(LDFLAGS_DEBUG)
+debug: .depend $(alltargets)
+
+clean:
+	@$(RM) -f $(alltargets) .depend *~
+
+%: %.cpp
+	@echo -e "$(BOLD)>>> Building '$@' example...$(NC)"
+	$(CC) $(LDFLAGS) NiFpga.o $(CFLAGS) -o $@ $^
+
+%: %.c
+	@echo -e "$(BOLD)>>> Building '$@' example...$(NC)"
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
+
+# Generate header file dependencies
+.depend: $(sources)
+	@$(CC) $(CFLAGS) -MM $^ > $@
+
+-include .depend
+
