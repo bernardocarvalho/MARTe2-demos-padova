@@ -7,7 +7,7 @@
         Class = EPICS::EPICSPV
         PVName = "MARTE2-DEMO-APP:STATUS"
         PVType = int32
-    }    
+    }
     +PV_COMMAND = {
         Class = EPICS::EPICSPV
         PVName = "MARTE2-DEMO-APP:COMMAND"
@@ -25,7 +25,134 @@
         Event = {
             Destination = StateMachine
             PVValue = Ignore
-            Function = "RESET" 
+            Function = "RESET"
+        }
+    }
+}
++Types = {
+    Class = ReferenceContainer
+    +ThreadStatsStruct = {
+        Class = IntrospectionStructure
+        Thread1C = {
+            Type = uint32
+        }
+        Thread1H = {
+            Type = uint32
+            NumberOfElements = 10
+        }
+    }
+    +StatesStatsStruct = {
+        Class = IntrospectionStructure
+        Time = {
+            Type = uint32
+        }
+        Idle = {
+            Type = ThreadStatsStruct
+        }
+        Run = {
+            Type = ThreadStatsStruct
+        }
+    }
+    +MeasurementStruct = {
+        Class = IntrospectionStructure
+        Measurement0 = {
+            Type = float64
+        }
+        Measurement1 = {
+            Type = float64
+        }
+        Measurement2 = {
+            Type = float64
+        }
+        Measurement3 = {
+            Type = float64
+        }
+    }
+    +ReferenceStruct = {
+        Class = IntrospectionStructure
+        Reference0 = {
+            Type = float64
+        }
+        Reference1 = {
+            Type = float64
+        }
+        Reference2 = {
+            Type = float64
+        }
+        Reference3 = {
+            Type = float64
+        }
+    }
+    +ErrorStruct = {
+        Class = IntrospectionStructure
+        Error0 = {
+            Type = float64
+        }
+        Error1 = {
+            Type = float64
+        }
+        Error2 = {
+            Type = float64
+        }
+        Error3 = {
+            Type = float64
+        }
+    }
+    +ControlStruct = {
+        Class = IntrospectionStructure
+        Control0 = {
+            Type = float64
+        }
+        Control1 = {
+            Type = float64
+        }
+        Control2 = {
+            Type = float64
+        }
+        Control3 = {
+            Type = float64
+        }
+    }
+    +SignalsStruct = {
+        Class = IntrospectionStructure
+        Time = {
+            Type = uint32
+        }
+        Measurements = {
+            Type = MeasurementStruct
+        }
+        References = {
+            Type = ReferenceStruct
+        }
+        Errors = {
+            Type = ErrorStruct
+        }
+        Controls = {
+            Type = ControlStruct
+        }
+    }
+}
++EPICSPVADB = {
+    Class = EPICSPVA::EPICSPVADatabase
+    StackSize = 1048576
+    CPUs = 0x1
+    AutoStart = 0
+    +DemoAppStatistics = {
+        Class = EPICSPVA::EPICSPVARecord
+        Alias = "MARTe2-Demo-App:Statistics"
+        Structure = {
+            value = {//Ugly name which allows to use pvget directly
+                Type = StatesStatsStruct
+            }
+        }
+    }
+    +DemoAppSignals = {
+        Class = EPICSPVA::EPICSPVARecord
+        Alias = "MARTe2-Demo-App:Signals"
+        Structure = {
+            value = {//Ugly name which allows to use pvget directly
+                Type = SignalsStruct
+            }
         }
     }
 }
@@ -39,7 +166,7 @@
     +ResourcesHtml = {
         Class = HttpDirectoryResource
         BaseDir = "../../MARTe2-dev/Resources/HTTP/"
-    }    
+    }
     +HttpMessageInterface = {
         Class = HttpMessageInterface
         +GOTOIDLE = {
@@ -57,7 +184,7 @@
         +GOTOERR = {
             Class = Message
             Destination = StateMachineError
-            Function = GOTOERR 
+            Function = GOTOERR
             Mode = ExpectsReply
         }
     }
@@ -75,17 +202,17 @@
 +StateMachine = {
     Class = StateMachine
     +INITIAL = {
-        Class = ReferenceContainer      
+        Class = ReferenceContainer
         +START = {
             Class = StateMachineEvent
             NextState = "IDLE"
-            NextStateError = "IDLE"
+            NextStateError = "ERROR"
             Timeout = 0
             +StartHttpServer = {
                 Class = Message
                 Destination = "WebServer"
-                Function = "Start"
                 Mode = ExpectsReply
+                Function = "Start"
             }
             +StartEPICSCAInterface = {
                 Class = Message
@@ -93,15 +220,11 @@
                 Mode = ExpectsReply
                 Function = "Start"
             }
-            +OpenTreeMsg = {
+            +StartEPICSPVAInterface = {
                 Class = Message
-                Destination = "TestApp.Data.SignalsWriter"
-                Function = OpenTree
+                Destination = "EPICSPVADB"
                 Mode = ExpectsReply
-                +Parameters = {
-                    Class = ConfigurationDatabase
-                    param1 = 1
-                }
+                Function = "Start"
             }
             +ChangeToStateIdleMsg = {
                 Class = Message
@@ -126,9 +249,18 @@
         +GOTORUN = {
             Class = StateMachineEvent
             NextState = "RUN"
-            NextStateError = "IDLE"
-            Timeout = 0 
-            
+            NextStateError = "ERROR"
+            Timeout = 0
+            +OpenTreeMsg = {
+                Class = Message
+                Destination = "TestApp.Data.MDSSignalsWriter"
+                Function = OpenTree
+                Mode = ExpectsReply
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = 1
+                }
+            }
             +ChangeToRunMsg = {
                 Class = Message
                 Destination = TestApp
@@ -155,11 +287,24 @@
     }
     +RUN = {
         Class = ReferenceContainer
+        +ENTER = {
+            Class = ReferenceContainer
+            +SetStatusPV = {
+                Class = Message
+                Destination = "EPICSCAInterface.PV_STATUS"
+                Function = CAPut
+                Mode = ExpectsReply
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = 1
+                }
+            }
+        }
         +GOTOIDLE = {
             Class = StateMachineEvent
             NextState = "IDLE"
-            NextStateError = "IDLE"
-            Timeout = 0         
+            NextStateError = "ERROR"
+            Timeout = 0
             +ChangeToIdleMsg = {
                 Class = Message
                 Destination = TestApp
@@ -182,7 +327,93 @@
                 Function = StartNextStateExecution
                 Mode = ExpectsReply
             }
-        }   
+            +SetStatusPV = {
+                Class = Message
+                Destination = "EPICSCAInterface.PV_STATUS"
+                Function = CAPut
+                Mode = ExpectsReply
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = 0
+                }
+            }
+        }
+    }
+    +ERROR = {
+        Class = ReferenceContainer
+        +ENTER = {
+            Class = ReferenceContainer
+            +SetStatusPV = {
+                Class = Message
+                Destination = "EPICSCAInterface.PV_STATUS"
+                Function = CAPut
+                Mode = ExpectsReply
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = -1
+                }
+            }
+            +ChangeToErrorMsg = {
+                Class = Message
+                Destination = TestApp
+                Mode = ExpectsReply
+                Function = PrepareNextState
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = Error
+                }
+            }
+            +StopCurrentStateExecutionMsg = {
+                Class = Message
+                Destination = TestApp
+                Function = StopCurrentStateExecution
+                Mode = ExpectsReply
+            }
+            +StartNextStateExecutionMsg = {
+                Class = Message
+                Destination = TestApp
+                Function = StartNextStateExecution
+                Mode = ExpectsReply
+            }
+        }
+        +RESET = {
+            Class = StateMachineEvent
+            NextState = "IDLE"
+            NextStateError = "ERROR"
+            Timeout = 0
+            +ChangeToIdleMsg = {
+                Class = Message
+                Destination = TestApp
+                Mode = ExpectsReply
+                Function = PrepareNextState
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = Idle
+                }
+            }
+            +StopCurrentStateExecutionMsg = {
+                Class = Message
+                Destination = TestApp
+                Function = StopCurrentStateExecution
+                Mode = ExpectsReply
+            }
+            +StartNextStateExecutionMsg = {
+                Class = Message
+                Destination = TestApp
+                Function = StartNextStateExecution
+                Mode = ExpectsReply
+            }
+            +SetStatusPV = {
+                Class = Message
+                Destination = "EPICSCAInterface.PV_STATUS"
+                Function = CAPut
+                Mode = ExpectsReply
+                +Parameters = {
+                    Class = ConfigurationDatabase
+                    param1 = 0
+                }
+            }
+        }
     }
 }
 $TestApp = {
@@ -202,8 +433,30 @@ $TestApp = {
                 }
                 ADC0_0 = {
                     DataSource = NI6259_0_ADC
-                    Samples = 1000
-                    Frequency = 1000
+                    Samples = 125
+                    Frequency = 2000
+                }
+                ADC1_0 = {
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
+                }
+                ADC2_0 = {
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
+                }
+                ADC3_0 = {
+                    DataSource = NI6259_0_ADC
+                    Samples = 125
+                }
+                Idle_Thread1_CycleTime = {                  
+                    DataSource = Timings
+                    Alias = "Idle.Thread1_CycleTime"
+                    Type = uint32           
+                }
+                Run_Thread1_CycleTime = {                   
+                    DataSource = Timings
+                    Alias = "Run.Thread1_CycleTime"
+                    Type = uint32           
                 }
             }
             OutputSignals = {
@@ -218,49 +471,98 @@ $TestApp = {
                 ADC0_0 = {
                     DataSource = DDB1
                     Type = int16
-                    NumberOfElements = 1000
+                    NumberOfElements = 125
                     NumberOfDimensions = 1          
                 }  
+                ADC1_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
+                }  
+                ADC2_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
+                }  
+                ADC3_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1          
+                }  
+                Idle_Thread1_CycleTime = {
+                    DataSource = DDB1
+                    Type = uint32           
+                }
+                Run_Thread1_CycleTime = {                   
+                    DataSource = DDB1
+                    Type = uint32           
+                }
+
             }
         }
-        +GAMDownsample = {
-            Class = IOGAM
+        +GAMFilterDownsampling = {
+            Class = FilterDownsamplingGAM
+            SamplingFrequency = 250000
+            CutOffFrequency = 200
             InputSignals = {
                 ADC0_0 = {
                     DataSource = DDB1
-                    Type = int16
-                    NumberOfElements = 1000
-                    Ranges = {{0, 0}}
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1
+                }
+                ADC1_0 = {
+                    DataSource = DDB1
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1
+                }
+                ADC2_0 = {
+                    DataSource = DDB1
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1
+                }
+                ADC3_0 = {
+                    DataSource = DDB1
+                    NumberOfElements = 125
+                    NumberOfDimensions = 1
                 }
             }
-            OutputSignals = {
-                ADC0_0_0 = {
+            OutputSignals = {                
+                Measurement0 = {
                     DataSource = DDB1
-                    Type = int16
+                    Type = float64
+                    NumberOfElements = 1     
+                    NumberOfDimensions = 1
+                    Gain = 0.000305176
+                }  
+                Measurement1 = {
+                    DataSource = DDB1
+                    Type = float64
                     NumberOfElements = 1
+                    NumberOfDimensions = 1   
+                    Gain = 0.000305176
                 }
-            }
-        }
-        +GAMConvert = {
-            Class = ConversionGAM
-            InputSignals = {
-                ADC0_0_0 = {
+                Measurement2 = {
                     DataSource = DDB1
-                    Type = int16
-                }
-            }
-            OutputSignals = {
-                ADC0_0_0_f = {
-                    DataSource = DDB1
-                    Type = float32
+                    Type = float64
                     NumberOfElements = 1
+                    NumberOfDimensions = 1
+                    Gain = 0.000305176
+                }
+                Measurement3 = {
+                    DataSource = DDB1
+                    Type = float64
+                    NumberOfElements = 1
+                    NumberOfDimensions = 1
                     Gain = 0.000305176
                 }
             }
-        }
-        +GAMWF1 = {
+        } 
+        +GAMRef0 = {
             Class = WaveformGAM::WaveformSin
-            Amplitude = 0.01
+            Amplitude = 1.0
             Frequency = 1.0
             Phase = 0.0
             Offset = 0.0
@@ -271,26 +573,241 @@ $TestApp = {
                 }
             }
             OutputSignals = {
-                DACReference = {
+                Reference0 = {
                     DataSource = DDB1
-                    Type = float32
+                    Type = float64
                 }
             }
         }
-        +GAMDAC = {
-            Class = IOGAM
+        +GAMRef1 = {
+            Class = WaveformGAM::WaveformSin
+            Amplitude = 1.0
+            Frequency = 3.0
+            Phase = 0.0
+            Offset = 0.0
             InputSignals = {
-                DACReference = {
+                Time = {
                     DataSource = DDB1
-                    Type = float32
+                    Type = uint32 
                 }
             }
             OutputSignals = {
-                DACReference = {
-                    DataSource = NI6259_0_DAC
-                    Alias = DAC0_0
-                    Type = float32
-                    Trigger = 1
+                Reference1 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+            }
+        }
+        +GAMRef2 = {
+            Class = WaveformGAM::WaveformSin
+            Amplitude = 1.0
+            Frequency = 7.0
+            Phase = 0.0
+            Offset = 0.0
+            InputSignals = {
+                Time = {
+                    DataSource = DDB1
+                    Type = uint32 
+                }
+            }
+            OutputSignals = {
+                Reference2 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+            }
+        }
+        +GAMRef3 = {
+            Class = WaveformGAM::WaveformSin
+            Amplitude = 1.0
+            Frequency = 10.0
+            Phase = 0.0
+            Offset = 0.0
+            InputSignals = {
+                Time = {
+                    DataSource = DDB1
+                    Type = uint32 
+                }
+            }
+            OutputSignals = {
+                Reference3 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+            }
+        }
+        +GAMHistogramCycleTimes = {
+            Class = HistogramGAM
+            BeginCycleNumber = 10
+            StateChangeResetName = All
+            InputSignals = {
+                Idle_Thread1_CycleTime = {
+                    DataSource = DDB1
+                    Type = uint32
+                    MinLim = 400
+                    MaxLim = 600
+                }
+                Run_Thread1_CycleTime = {
+                    DataSource = DDB1
+                    Type = uint32
+                    MinLim = 400
+                    MaxLim = 600
+                }
+            }
+            OutputSignals = {
+                Idle_Thread1_CycleTime_Stats = {
+                    DataSource = DDB1
+                    NumberOfElements = 10
+                    Type = uint32
+                }
+                Run_Thread1_CycleTime_Stats = {
+                    DataSource = DDB1
+                    NumberOfElements = 10
+                    Type = uint32
+                }
+            }
+        }
+        +GAMSSM = {
+            Class = SSMGAM
+            StateMatrix = {
+                {1 0 0 0 0 0 0 0}
+                {0 1 0 0 0 0 0 0}
+                {0 0 1 0 0 0 0 0}
+                {0 0 0 1 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+            }
+            InputMatrix = {
+                {5e-4 0 0 0 -5e-4 0 0 0}
+                {0 5e-4 0 0 0 -5e-4 0 0}
+                {0 0 5e-4  0 0 0 -5e-4 0}
+                {0 0 0 5e-4 0 0 0 -5e-4}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+            }
+            OutputMatrix = {
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {0 0 0 0 0 0 0 0}
+                {1 0 0 0 0 0 0 0}
+                {0 1 0 0 0 0 0 0}
+                {0 0 1 0 0 0 0 0}
+                {0 0 0 1 0 0 0 0}
+            }
+            FeedthroughMatrix = {
+                {1 0 0 0 -1 0 0 0}
+                {0 1 0 0 0 -1 0 0}
+                {0 0 1 0 0 0 -1 0}
+                {0 0 0 1 0 0 0 -1}
+                {1 0 0 0 -1 0 0 0}
+                {0 1 0 0 0 -1 0 0}
+                {0 0 1 0 0 0 -1 0}
+                {0 0 0 1 0 0 0 -1}
+            }
+            ResetInEachState = 0
+            InputSignals = {
+                Reference0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Reference1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Reference2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Reference3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Measurement0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Measurement1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Measurement2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Measurement3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+            }
+            OutputSignals = {
+                Error0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State4 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State5 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State6 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                State7 = {
+                    Type = float64
+                    DataSource = DDB1
                 }
             }
         }
@@ -301,52 +818,52 @@ $TestApp = {
                     DataSource = DDB1
                     Type = uint32
                 }
-                Idle_Thread1_CycleTime = {                  
-                    DataSource = Timings
-                    Alias = "Idle.Thread1_CycleTime"
-                    Type = uint32           
+                Idle_Thread1_CycleTime = {
+                    DataSource = DDB1
+                    Type = uint32
                 }
-                GAMADC_ReadTime = {
-                    DataSource = Timings
-                    Type = uint32           
-                } 
-                GAMADC_ExecTime = {
-                    DataSource = Timings
-                    Type = uint32           
+                Idle_Thread1_CycleTime_Stats = {
+                    DataSource = DDB1
+                    Type = uint32
+                    NumberOfElements = 10
                 }
-                GAMADC_WriteTime = {
-                    DataSource = Timings
-                    Type = uint32           
+                Run_Thread1_CycleTime = {
+                    DataSource = DDB1
+                    Type = uint32
                 }
-                GAMPerformanceWriter_WriteTime= {
-                    DataSource = Timings
-                    Type = uint32           
+                Run_Thread1_CycleTime_Stats = {
+                    DataSource = DDB1
+                    Type = uint32
+                    NumberOfElements = 10
                 }
             }
             OutputSignals = {
                 Time = {
                     DataSource = PerformanceWriter
+                    Alias = "value.Time"
                     Type = uint32
                 }
-                Idle_Thread1_CycleTime = {                  
+                Idle_Thread1_CycleTime = {
                     DataSource = PerformanceWriter
-                    Type = uint32           
+                    Alias = "value.Idle.Thread1C"
+                    Type = uint32
                 }
-                GAMADC_ReadTime = {
-                    DataSource = PerformanceWriter 
-                    Type = uint32           
-                } 
-                GAMADC_ExecTime = {
+                Idle_Thread1_CycleTime_Stats = {
                     DataSource = PerformanceWriter
-                    Type = uint32           
+                    Alias = "value.Idle.Thread1H"
+                    Type = uint32
+                    NumberOfElements = 10
                 }
-                GAMADC_WriteTime = {
+                Run_Thread1_CycleTime = {
                     DataSource = PerformanceWriter
-                    Type = uint32           
+                    Alias = "value.Run.Thread1C"
+                    Type = uint32
                 }
-                GAMPerformanceWriter_WriteTime= {
+                Run_Thread1_CycleTime_Stats = {
                     DataSource = PerformanceWriter
-                    Type = uint32           
+                    Alias = "value.Run.Thread1H"
+                    Type = uint32
+                    NumberOfElements = 10
                 }
             }
         }
@@ -357,24 +874,387 @@ $TestApp = {
                     DataSource = DDB1
                     Type = uint32
                 }
-                ADC0_0 = {
+                Reference0 = {
                     DataSource = DDB1
-                    Type = int16
-                    NumberOfElements = 1000
-                    NumberOfDimensions = 1          
-                }  
+                    Type = float64
+                }
+                Reference1 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Reference2 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Reference3 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement0 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement1 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement2 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement3 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Error0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
             }
             OutputSignals = {
                 Time = {
                     DataSource = SignalsWriter
                     Type = uint32
+                    Alias = "value.Time"
+                }
+                Reference0 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.References.Reference0"
+                }
+                Reference1 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.References.Reference1"
+                }
+                Reference2 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.References.Reference2"
+                }
+                Reference3 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.References.Reference3"
+                }
+                Measurement0 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.Measurements.Measurement0"
+                }
+                Measurement1 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.Measurements.Measurement1"
+                }
+                Measurement2 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.Measurements.Measurement2"
+                }
+                Measurement3 = {
+                    DataSource = SignalsWriter
+                    Type = float64
+                    Alias = "value.Measurements.Measurement3"
+                }
+                Error0 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Errors.Error0"
+                }
+                Error1 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Errors.Error1"
+                }
+                Error2 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Errors.Error2"
+                }
+                Error3 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Errors.Error3"
+                }
+                Control0 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Controls.Control0"
+                }
+                Control1 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Controls.Control1"
+                }
+                Control2 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Controls.Control2"
+                }
+                Control3 = {
+                    Type = float64
+                    DataSource = SignalsWriter
+                    Alias = "value.Controls.Control3"
+                }
+            }
+        }
+        +GAMMDSSignalsWriter = {
+            Class = IOGAM
+            InputSignals = {
+                Time = {
+                    DataSource = DDB1
+                    Type = uint32
+                }
+                Reference0 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Reference1 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Reference2 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Reference3 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement0 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement1 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement2 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Measurement3 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Error0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Error3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control0 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control1 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control2 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Control3 = {
+                    Type = float64
+                    DataSource = DDB1
+                }
+                Run_Thread1_CycleTime = {
+                    DataSource = DDB1
+                    Type = uint32
                 }
                 ADC0_0 = {
-                    DataSource = SignalsWriter
+                    DataSource = DDB1
                     Type = int16
-                    NumberOfElements = 1000
-                    NumberOfDimensions = 1          
-                    Alias = Measurement0F
+                    NumberOfElements = 125
+                }
+                ADC1_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                }
+                ADC2_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                }
+                ADC3_0 = {
+                    DataSource = DDB1
+                    Type = int16
+                    NumberOfElements = 125
+                }
+            }
+            OutputSignals = {
+                Time = {
+                    DataSource = MDSSignalsWriter
+                    Type = uint32
+                }
+                Reference0 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Reference1 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Reference2 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Reference3 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Measurement0 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Measurement1 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Measurement2 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Measurement3 = {
+                    DataSource = MDSSignalsWriter
+                    Type = float64
+                }
+                Error0 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Error1 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Error2 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Error3 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Control0 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Control1 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Control2 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Control3 = {
+                    Type = float64
+                    DataSource = MDSSignalsWriter 
+                }
+                Run_Thread1_CycleTime = {
+                    Type = uint32
+                    DataSource = MDSSignalsWriter 
+                }
+                Measurement0F = {
+                    DataSource = MDSSignalsWriter
+                    Type = int16
+                    Samples = 125
+                }
+                Measurement1F = {
+                    DataSource = MDSSignalsWriter
+                    Type = int16
+                    Samples = 125
+                }
+                Measurement2F = {
+                    DataSource = MDSSignalsWriter
+                    Type = int16
+                    Samples = 125
+                }
+                Measurement3F = {
+                    DataSource = MDSSignalsWriter
+                    Type = int16
+                    Samples = 125
+                }
+            }
+        }
+        +GAMDAC = {
+            Class = ConversionGAM
+            InputSignals = {
+                Control0 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Control1 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Control2 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+                Control3 = {
+                    DataSource = DDB1
+                    Type = float64
+                }
+            }
+            OutputSignals = {
+                DAC0_0 = {
+                    DataSource = NI6259_0_DAC
+                    Type = float32
+                }
+                DAC1_0 = {
+                    DataSource = NI6259_0_DAC
+                    Type = float32
+                }
+                DAC2_0 = {
+                    DataSource = NI6259_0_DAC
+                    Type = float32
+                }
+                DAC3_0 = {
+                    DataSource = NI6259_0_DAC
+                    Type = float32
+                    Trigger = 1
                 }
             }
         }
@@ -384,17 +1264,43 @@ $TestApp = {
         DefaultDataSource = DDB1
         +DDB1 = {
             Class = GAMDataSource
-        }        
+        }
         +LoggerDataSource = {
             Class = LoggerDataSource
         }
         +Timings = {
             Class = TimingDataSource
         }
+        +PerformanceWriter = {
+            Class = EPICSPVADataSource::EPICSPVAOutput
+            StackSize = 1048576
+            CPUs = 0x1
+            IgnoreBufferOverrun = 1
+            NumberOfBuffers = 10
+            Signals = {
+                value = {//Ugly name which allows to use pvget directly
+                    Alias = "MARTe2-Demo-App:Statistics"
+                    Type = StatesStatsStruct
+                }
+            }
+        }
         +SignalsWriter = {
+            Class = EPICSPVADataSource::EPICSPVAOutput
+            StackSize = 1048576
+            CPUs = 0x1
+            IgnoreBufferOverrun = 1
+            NumberOfBuffers = 10
+            Signals = {
+                value = {
+                    Alias = "MARTe2-Demo-App:Signals"
+                    Type = SignalsStruct
+                }
+            }
+        }
+        +MDSSignalsWriter = {
             Class = MDSWriter::MDSWriter
             NumberOfBuffers = 120000
-            CPUMask = 0x1
+            CPUMask = 0x8
             StackSize = 10000000
             TreeName = "rtappdemo"
             StoreOnTrigger = 0
@@ -407,45 +1313,194 @@ $TestApp = {
                     SignalType = uint32
                     TimeSignal = 1
                 }
+                Measurement0 = {
+                    NodeName = "INP.MEAS0"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "INP.MEAS0D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Measurement1 = {
+                    NodeName = "INP.MEAS1"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "INP.MEAS1D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Measurement2 = {
+                    NodeName = "INP.MEAS2"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "INP.MEAS2D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Measurement3 = {
+                    NodeName = "INP.MEAS3"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "INP.MEAS3D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Reference0 = {
+                    NodeName = "REFS.REF0"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "REFS.REF0D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Reference1 = {
+                    NodeName = "REFS.REF1"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "REFS.REF1D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Reference2 = {
+                    NodeName = "REFS.REF2"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "REFS.REF2D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Reference3 = {
+                    NodeName = "REFS.REF3"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "REFS.REF3D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Control0 = {
+                    NodeName = "CONTROLS.CONTROL0"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "CONTROLS.CONTROL0D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Control1 = {
+                    NodeName = "CONTROLS.CONTROL1"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "CONTROLS.CONTROL1D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Control2 = {
+                    NodeName = "CONTROLS.CONTROL2"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "CONTROLS.CONTROL2D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Control3 = {
+                    NodeName = "CONTROLS.CONTROL3"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "CONTROLS.CONTROL3D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Error0 = {
+                    NodeName = "ERRORS.ERROR0"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "ERRORS.ERROR0D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Error1 = {
+                    NodeName = "ERRORS.ERROR1"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "ERRORS.ERROR1D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Error2 = {
+                    NodeName = "ERRORS.ERROR2"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "ERRORS.ERROR2D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Error3 = {
+                    NodeName = "ERRORS.ERROR3"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "ERRORS.ERROR3D"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
+                Run_Thread1_CycleTime = {
+                    NodeName = "PERF.CYCLET"
+                    Period = 5e-4
+                    MakeSegmentAfterNWrites = 2000
+                    DecimatedNodeName = "PERF.CYCLETD"
+                    MinMaxResampleFactor = 10
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
+                }
                 Measurement0F = {
                     NodeName = "INP.MEAS0F"
-                    Period = 1e-6
-                    MakeSegmentAfterNWrites = 50
+                    Period = 4e-6
+                    MakeSegmentAfterNWrites = 80
                     DecimatedNodeName = "INP.MEAS0FD"
                     MinMaxResampleFactor = 1000
                     SamplePhase = 0
                     AutomaticSegmentation = 0
                 }
-            }
-        }
-        +PerformanceWriter = {
-            Class = FileDataSource::FileWriter
-            NumberOfBuffers = 10000
-            CPUMask = 1 
-            StackSize = 10000000
-            Filename = "/tmp/RTApp-NI6259-1-performance.csv" 
-            Overwrite = "yes" 
-            FileFormat = "csv"
-            CSVSeparator = "," 
-            StoreOnTrigger = 0 
-            Signals = {
-                Time = { 
-                    Type = "uint32"
+                Measurement1F = {
+                    NodeName = "INP.MEAS1F"
+                    Period = 4e-6
+                    MakeSegmentAfterNWrites = 80
+                    DecimatedNodeName = "INP.MEAS1FD"
+                    MinMaxResampleFactor = 1000
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
                 }
-                Idle_Thread1_CycleTime = {
-                    Type = "uint32"
-                } 
-                GAMADC_ReadTime = {
-                    Type = "uint32"
+                Measurement2F = {
+                    NodeName = "INP.MEAS2F"
+                    Period = 4e-6
+                    MakeSegmentAfterNWrites = 80
+                    DecimatedNodeName = "INP.MEAS2FD"
+                    MinMaxResampleFactor = 1000
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
                 }
-                GAMADC_ExecTime = {
-                    Type = "uint32"
-                }
-                GAMADC_WriteTime = {
-                    Type = "uint32"
-                }
-                GAMPerformanceWriter_WriteTime = {
-                    Type = "uint32"
+                Measurement3F = {
+                    NodeName = "INP.MEAS3F"
+                    Period = 4e-6
+                    MakeSegmentAfterNWrites = 80
+                    DecimatedNodeName = "INP.MEAS3FD"
+                    MinMaxResampleFactor = 1000
+                    SamplePhase = 0
+                    AutomaticSegmentation = 0
                 }
             }
         }
@@ -474,27 +1529,27 @@ $TestApp = {
                     InputPolarity = Bipolar
                     InputMode = RSE
                 }
-                /*ADC0_1 = {
+                ADC1_0 = {
                     InputRange = 10
                     Type = int16
                     ChannelId = 1
                     InputPolarity = Bipolar
                     InputMode = RSE
                 }
-                ADC0_2 = {
+                ADC2_0 = {
                     InputRange = 10
                     Type = int16
                     ChannelId = 2
                     InputPolarity = Bipolar
                     InputMode = RSE
                 }
-                ADC0_3 = {
+                ADC3_0 = {
                     InputRange = 10
                     Type = int16
                     ChannelId = 3
                     InputPolarity = Bipolar
                     InputMode = RSE
-                }*/
+                }
             }
         }
         +NI6259_0_DAC = {
@@ -509,8 +1564,24 @@ $TestApp = {
                     ChannelId = 0
                     OutputPolarity = Bipolar                    
                 } 
+                DAC1_0 = {
+                    Type = float32
+                    ChannelId = 0
+                    OutputPolarity = Bipolar                    
+                } 
+                DAC2_0 = {
+                    Type = float32
+                    ChannelId = 0
+                    OutputPolarity = Bipolar                    
+                } 
+                DAC3_0 = {
+                    Type = float32
+                    ChannelId = 0
+                    OutputPolarity = Bipolar                    
+                } 
             }
         }
+
     }
     +States = {
         Class = ReferenceContainer
@@ -521,7 +1592,29 @@ $TestApp = {
                 +Thread1 = {
                     Class = RealTimeThread
                     CPUs = 0x4
-                    Functions = {GAMADC GAMDownsample GAMConvert GAMWF1 GAMDAC GAMSignalsWriter GAMPerformanceWriter }
+                    Functions = {GAMADC GAMRef0 GAMRef1 GAMRef2 GAMRef3 GAMFilterDownsampling GAMSSM GAMDAC GAMHistogramCycleTimes GAMSignalsWriter GAMPerformanceWriter }
+                }
+            }
+        }
+        +Run = {
+            Class = RealTimeState
+            +Threads = {
+                Class = ReferenceContainer
+                +Thread1 = {
+                    Class = RealTimeThread
+                    CPUs = 0x4
+                    Functions = {GAMADC GAMRef0 GAMRef1 GAMRef2 GAMRef3 GAMFilterDownsampling GAMSSM GAMDAC GAMHistogramCycleTimes GAMSignalsWriter GAMPerformanceWriter GAMMDSSignalsWriter }
+                }
+            }
+        }
+        +Error = {
+            Class = RealTimeState
+            +Threads = {
+                Class = ReferenceContainer
+                +Thread1 = {
+                    Class = RealTimeThread
+                    CPUs = 0x4
+                    Functions = {GAMADC }
                 }
             }
         }
@@ -531,3 +1624,4 @@ $TestApp = {
         TimingDataSource = Timings
     }
 }
+
