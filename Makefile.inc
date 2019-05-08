@@ -36,7 +36,8 @@ SPB    = DataSources/MDSReaderNS.x \
 	Other/ControllerEx1.x \
 	Other/ControllerEx2.x \
 	Other/Examples.x \
-	Other/MDSStructuredDataIEx1.x
+	Other/MDSStructuredDataIEx1.x \
+	Other/OPCUAClientEx.x
 
 #DataSources/MDSStream.x 
 

@@ -1,0 +1,6 @@
+all:
+	gcc -std=c99 open62541.c opcuaRead.c -o UARead
+	gcc -std=c99 open62541.c opcuaWrite.c -o UAWrite
+
+clean:
+	rm UARead UAWrite
