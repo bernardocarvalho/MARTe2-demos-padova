@@ -1,0 +1,27 @@
+digraph G {
+rankdir=LR
+concentrate=true
+"Error.Thread1.GAMADC" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMADC <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+subgraph cluster_Error {
+label = "State: Error"
+subgraph cluster_Error_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Error.Thread1.GAMADC"
+}
+}
+"+DDB1" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+"+LoggerDataSource" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+"+Timings" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+"+PerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+PerformanceWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+SignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SignalsWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+MDSSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+MDSSignalsWriter <BR/>(MDSWriter::MDSWriter)</font></TD></TR></TABLE>>]
+"+SDNPLCSub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPLCSub <BR/>(SDN::SDNSubscriber)</font></TD></TR></TABLE>>]
+"+SDNPLCPub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPLCPub <BR/>(SDN::SDNPublisher)</font></TD></TR></TABLE>>]
+"+NI6259_0_ADC" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+NI6259_0_ADC <BR/>(NI6259::NI6259ADC)</font></TD></TR></TABLE>>]
+"+NI6259_0_DAC" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+NI6259_0_DAC <BR/>(NI6259::NI6259DAC)</font></TD></TR></TABLE>>]
+"+RTThreadASynch" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+RTThreadASynch <BR/>(RealTimeThreadAsyncBridge)</font></TD></TR></TABLE>>]
+"+NI6259_0_ADC"->"Error.Thread1.GAMADC"
+"+Timings"->"Error.Thread1.GAMADC"
+"Error.Thread1.GAMADC"->"+DDB1"
+}

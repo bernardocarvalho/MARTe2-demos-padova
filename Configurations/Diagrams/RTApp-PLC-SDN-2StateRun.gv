@@ -1,0 +1,65 @@
+digraph G {
+rankdir=LR
+concentrate=true
+"Run.Thread1.GAMADC" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMADC <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMFilterDownsampling" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMFilterDownsampling <BR/>(FilterDownsamplingGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMReferences" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMReferences <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMMeasurements" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMMeasurements <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMSSM" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSSM <BR/>(SSMGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMDAC" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMDAC <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSignalsWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMHistogramCycleTimes" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMHistogramCycleTimes <BR/>(HistogramGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMPerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPerformanceWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.Thread1.GAMMDSSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMMDSSignalsWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Run.ThreadPLC.GAMPLCSDNSub" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPLCSDNSub <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+"Run.ThreadPLC.GAMPLCSDNPub" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPLCSDNPub <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+subgraph cluster_Run {
+label = "State: Run"
+subgraph cluster_Run_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Run.Thread1.GAMADC"->"Run.Thread1.GAMFilterDownsampling"->"Run.Thread1.GAMReferences"->"Run.Thread1.GAMMeasurements"->"Run.Thread1.GAMSSM"->"Run.Thread1.GAMDAC"->"Run.Thread1.GAMSignalsWriter"->"Run.Thread1.GAMHistogramCycleTimes"->"Run.Thread1.GAMPerformanceWriter"->"Run.Thread1.GAMMDSSignalsWriter"
+}
+subgraph cluster_Run_ThreadPLC {
+label = "Thread: ThreadPLC"
+color= "red"
+"Run.ThreadPLC.GAMPLCSDNSub"->"Run.ThreadPLC.GAMPLCSDNPub"
+}
+}
+"+DDB1" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+"+LoggerDataSource" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+"+Timings" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+"+PerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+PerformanceWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+SignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SignalsWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+MDSSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+MDSSignalsWriter <BR/>(MDSWriter::MDSWriter)</font></TD></TR></TABLE>>]
+"+SDNPLCSub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPLCSub <BR/>(SDN::SDNSubscriber)</font></TD></TR></TABLE>>]
+"+SDNPLCPub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPLCPub <BR/>(SDN::SDNPublisher)</font></TD></TR></TABLE>>]
+"+NI6259_0_ADC" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+NI6259_0_ADC <BR/>(NI6259::NI6259ADC)</font></TD></TR></TABLE>>]
+"+NI6259_0_DAC" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+NI6259_0_DAC <BR/>(NI6259::NI6259DAC)</font></TD></TR></TABLE>>]
+"+RTThreadASynch" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+RTThreadASynch <BR/>(RealTimeThreadAsyncBridge)</font></TD></TR></TABLE>>]
+"+NI6259_0_ADC"->"Run.Thread1.GAMADC"
+"+Timings"->"Run.Thread1.GAMADC"
+"Run.Thread1.GAMADC"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMFilterDownsampling"
+"Run.Thread1.GAMFilterDownsampling"->"+DDB1"
+"+RTThreadASynch"->"Run.Thread1.GAMReferences"
+"Run.Thread1.GAMReferences"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMMeasurements"
+"Run.Thread1.GAMMeasurements"->"+RTThreadASynch"
+"+DDB1"->"Run.Thread1.GAMSSM"
+"Run.Thread1.GAMSSM"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMDAC"
+"Run.Thread1.GAMDAC"->"+NI6259_0_DAC"
+"+DDB1"->"Run.Thread1.GAMSignalsWriter"
+"Run.Thread1.GAMSignalsWriter"->"+SignalsWriter"
+"+DDB1"->"Run.Thread1.GAMHistogramCycleTimes"
+"Run.Thread1.GAMHistogramCycleTimes"->"+DDB1"
+"+DDB1"->"Run.Thread1.GAMPerformanceWriter"
+"Run.Thread1.GAMPerformanceWriter"->"+PerformanceWriter"
+"+DDB1"->"Run.Thread1.GAMMDSSignalsWriter"
+"Run.Thread1.GAMMDSSignalsWriter"->"+MDSSignalsWriter"
+"+SDNPLCSub"->"Run.ThreadPLC.GAMPLCSDNSub"
+"Run.ThreadPLC.GAMPLCSDNSub"->"+RTThreadASynch"
+"+RTThreadASynch"->"Run.ThreadPLC.GAMPLCSDNPub"
+"Run.ThreadPLC.GAMPLCSDNPub"->"+SDNPLCPub"
+}

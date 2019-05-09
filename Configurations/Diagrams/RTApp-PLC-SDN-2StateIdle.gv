@@ -1,0 +1,62 @@
+digraph G {
+rankdir=LR
+concentrate=true
+"Idle.Thread1.GAMADC" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMADC <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMFilterDownsampling" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMFilterDownsampling <BR/>(FilterDownsamplingGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMReferences" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMReferences <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMMeasurements" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMMeasurements <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMSSM" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSSM <BR/>(SSMGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMDAC" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMDAC <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMSignalsWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMHistogramCycleTimes" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMHistogramCycleTimes <BR/>(HistogramGAM)</font></TD></TR></TABLE>>]
+"Idle.Thread1.GAMPerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPerformanceWriter <BR/>(IOGAM)</font></TD></TR></TABLE>>]
+"Idle.ThreadPLC.GAMPLCSDNSub" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPLCSDNSub <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+"Idle.ThreadPLC.GAMPLCSDNPub" [margin=0, shape=box, style=filled, fillcolor=white, color=blue,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">GAMPLCSDNPub <BR/>(ConversionGAM)</font></TD></TR></TABLE>>]
+subgraph cluster_Idle {
+label = "State: Idle"
+subgraph cluster_Idle_Thread1 {
+label = "Thread: Thread1"
+color= "red"
+"Idle.Thread1.GAMADC"->"Idle.Thread1.GAMFilterDownsampling"->"Idle.Thread1.GAMReferences"->"Idle.Thread1.GAMMeasurements"->"Idle.Thread1.GAMSSM"->"Idle.Thread1.GAMDAC"->"Idle.Thread1.GAMSignalsWriter"->"Idle.Thread1.GAMHistogramCycleTimes"->"Idle.Thread1.GAMPerformanceWriter"
+}
+subgraph cluster_Idle_ThreadPLC {
+label = "Thread: ThreadPLC"
+color= "red"
+"Idle.ThreadPLC.GAMPLCSDNSub"->"Idle.ThreadPLC.GAMPLCSDNPub"
+}
+}
+"+DDB1" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+DDB1 <BR/>(GAMDataSource)</font></TD></TR></TABLE>>]
+"+LoggerDataSource" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+LoggerDataSource <BR/>(LoggerDataSource)</font></TD></TR></TABLE>>]
+"+Timings" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+Timings <BR/>(TimingDataSource)</font></TD></TR></TABLE>>]
+"+PerformanceWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+PerformanceWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+SignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SignalsWriter <BR/>(EPICSPVADataSource::EPICSPVAOutput)</font></TD></TR></TABLE>>]
+"+MDSSignalsWriter" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+MDSSignalsWriter <BR/>(MDSWriter::MDSWriter)</font></TD></TR></TABLE>>]
+"+SDNPLCSub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPLCSub <BR/>(SDN::SDNSubscriber)</font></TD></TR></TABLE>>]
+"+SDNPLCPub" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+SDNPLCPub <BR/>(SDN::SDNPublisher)</font></TD></TR></TABLE>>]
+"+NI6259_0_ADC" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+NI6259_0_ADC <BR/>(NI6259::NI6259ADC)</font></TD></TR></TABLE>>]
+"+NI6259_0_DAC" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+NI6259_0_DAC <BR/>(NI6259::NI6259DAC)</font></TD></TR></TABLE>>]
+"+RTThreadASynch" [margin=0, shape=box, style=filled, fillcolor=white, color=darkgreen,label=<<TABLE border="0" cellborder="0"><TR><TD width="60" height="60"><font point-size="12">+RTThreadASynch <BR/>(RealTimeThreadAsyncBridge)</font></TD></TR></TABLE>>]
+"+NI6259_0_ADC"->"Idle.Thread1.GAMADC"
+"+Timings"->"Idle.Thread1.GAMADC"
+"Idle.Thread1.GAMADC"->"+DDB1"
+"+DDB1"->"Idle.Thread1.GAMFilterDownsampling"
+"Idle.Thread1.GAMFilterDownsampling"->"+DDB1"
+"+RTThreadASynch"->"Idle.Thread1.GAMReferences"
+"Idle.Thread1.GAMReferences"->"+DDB1"
+"+DDB1"->"Idle.Thread1.GAMMeasurements"
+"Idle.Thread1.GAMMeasurements"->"+RTThreadASynch"
+"+DDB1"->"Idle.Thread1.GAMSSM"
+"Idle.Thread1.GAMSSM"->"+DDB1"
+"+DDB1"->"Idle.Thread1.GAMDAC"
+"Idle.Thread1.GAMDAC"->"+NI6259_0_DAC"
+"+DDB1"->"Idle.Thread1.GAMSignalsWriter"
+"Idle.Thread1.GAMSignalsWriter"->"+SignalsWriter"
+"+DDB1"->"Idle.Thread1.GAMHistogramCycleTimes"
+"Idle.Thread1.GAMHistogramCycleTimes"->"+DDB1"
+"+DDB1"->"Idle.Thread1.GAMPerformanceWriter"
+"Idle.Thread1.GAMPerformanceWriter"->"+PerformanceWriter"
+"+SDNPLCSub"->"Idle.ThreadPLC.GAMPLCSDNSub"
+"Idle.ThreadPLC.GAMPLCSDNSub"->"+RTThreadASynch"
+"+RTThreadASynch"->"Idle.ThreadPLC.GAMPLCSDNPub"
+"Idle.ThreadPLC.GAMPLCSDNPub"->"+SDNPLCPub"
+}
