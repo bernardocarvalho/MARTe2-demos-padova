@@ -103,7 +103,7 @@ bool VoltToDacGAM::Setup() {
 bool VoltToDacGAM::Execute() {
     uint32 cnt = 0u;
     for (uint32 i = 0u; i < numberOfInputSignals; i++) {
-        for (uint32 i = 0u; i < numberOfElements[i]; i++) {
+        for (uint32 j = 0u; j < numberOfElements[i]; j++) {
             float64 factor = (voltage[cnt] - minIn) / ((maxIn - minIn));
             output[cnt] = (uint16)(minOut + (factor * (maxOut - minOut)));
             cnt++;
