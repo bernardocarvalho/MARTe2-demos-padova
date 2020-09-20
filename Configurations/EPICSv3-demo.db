@@ -31,3 +31,34 @@ record( waveform, "MARTE2-DEMO-APP:HIST-RUN-CT")
    field(NELM, 10)
    field(FTVL, "LONG")
 }
+
+record( longin, "MARTE2-DEMO-APP:TIME")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( longin, "MARTE2-DEMO-APP:COUNTER")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "MARTE2-DEMO-APP:ADC0S")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "MARTE2-DEMO-APP:ADC1S")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "MARTE2-DEMO-APP:ADC2S")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "MARTE2-DEMO-APP:ADC3S")
+{
+   field(DTYP, "Soft Channel")
+}
+

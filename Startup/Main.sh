@@ -24,6 +24,7 @@ if [ -z ${MARTe2_Components_DIR+x} ]; then
 export MARTe2_Components_DIR=~/Projects/MARTe2-components
 fi
 
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/DataSources/ADCSimulator/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/DataSources/MDSReaderNS/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/DataSources/MDSStream/
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:../Build/x86-linux/Components/DataSources/SimpleUDPSender/
