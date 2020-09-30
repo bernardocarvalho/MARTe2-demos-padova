@@ -54,6 +54,10 @@ Open a new shell and start the IOC:
 
 ## Start the DAN backend
 
+Make sure the service is running.
+
+`sudo systemctl start codac-6.1-dan_archiver_writer`
+
 Open a new shell and start the DAN backend
 
  `cd ~/Projects/MARTe2-demos-padova/Configurations`
