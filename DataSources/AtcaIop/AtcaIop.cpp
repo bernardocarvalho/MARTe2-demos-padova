@@ -27,13 +27,16 @@
 /*                         Standard header includes                          */
 /*---------------------------------------------------------------------------*/
 #include <math.h>
+#include <fcntl.h>
+#include <unistd.h> // for close()
 
 /*---------------------------------------------------------------------------*/
 /*                         Project header includes                           */
 /*---------------------------------------------------------------------------*/
 #include "AdvancedErrorManagement.h"
-#include "AtcaIop.h"
 #include "MemoryMapSynchronisedInputBroker.h"
+#include "AtcaIop.h"
+#include "atca-v6-pcie-ioctl.h"
 
 /*---------------------------------------------------------------------------*/
 /*                           Static definitions                              */
@@ -55,6 +58,9 @@ const float64 ADC_SIMULATOR_PI = 3.14159265359;
 namespace MARTe {
 AtcaIop::AtcaIop() :
         DataSourceI(), EmbeddedServiceMethodBinderI(), executor(*this) {
+    boardId = 2u;
+    boardFileDescriptor = -1;
+    deviceName = "";
     lastTimeTicks = 0u;
     sleepTimeTicks = 0u;
     timerPeriodUsecTime = 0u;
@@ -83,6 +89,10 @@ AtcaIop::~AtcaIop() {
             REPORT_ERROR(ErrorManagement::FatalError, "Could not stop SingleThreadService.");
         }
     }
+    if (boardFileDescriptor != -1) {
+        close(boardFileDescriptor);
+        REPORT_ERROR(ErrorManagement::Information, "Close device %d OK", boardFileDescriptor);
+    }
     uint32 k;
     for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
         if (adcValues[k] != NULL_PTR(int32 *)) {
@@ -97,6 +107,18 @@ bool AtcaIop::AllocateMemory() {
 
 bool AtcaIop::Initialise(StructuredDataI& data) {
     bool ok = DataSourceI::Initialise(data);
+    if (ok) {
+        ok = data.Read("DeviceName", deviceName);
+        if (!ok) {
+            REPORT_ERROR(ErrorManagement::ParametersError, "The DeviceName shall be specified");
+        }
+    }
+    if (ok) {
+        ok = data.Read("BoardId", boardId);
+        if (!ok) {
+            REPORT_ERROR(ErrorManagement::ParametersError, "The BoardId shall be specified");
+        }
+    }
     StreamString sleepNatureStr;
     if (!data.Read("SleepNature", sleepNatureStr)) {
         REPORT_ERROR(ErrorManagement::Information, "SleepNature was not set. Using Default.");
@@ -215,6 +237,23 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
         if (!ok) {
             REPORT_ERROR(ErrorManagement::ParametersError, "The signal %d shall be of type SignedInteger", i);
         }
+    }
+    StreamString fullDeviceName;
+    //Configure the board
+    if (ok) {
+        ok = fullDeviceName.Printf("%s_%d", deviceName.Buffer(), boardId);
+    }
+    if (ok) {
+        ok = fullDeviceName.Seek(0LLU);
+    }
+    if (ok) {
+        boardFileDescriptor = open(fullDeviceName.Buffer(), O_RDWR);
+        ok = (boardFileDescriptor > -1);
+        if (!ok) {
+            REPORT_ERROR_PARAMETERS(ErrorManagement::ParametersError, "Could not open device %s", fullDeviceName);
+        }
+        else
+            REPORT_ERROR(ErrorManagement::Information, "Open device %s OK", fullDeviceName);
     }
     uint32 nOfFunctions = GetNumberOfFunctions();
     float32 cycleFrequency = -1.0F;
