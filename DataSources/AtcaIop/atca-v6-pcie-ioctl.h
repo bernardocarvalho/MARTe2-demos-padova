@@ -11,6 +11,17 @@
 //#include "atca-v6-pcie.h"
 
 #define ADC_CHANNELS    16
+#define DMA_BUFFS 8 // Number of DMA ch0 buffs
+
+/* 256 + 3840 = 4096 B (PAGE_SIZE) data packet*/
+typedef struct _DMA_CH1_PCKT {
+    volatile uint32_t head_time_cnt;
+    volatile uint32_t header; // h5431BACD
+    volatile int32_t channel[60]; // 24 56
+    volatile uint32_t foot_time_cnt;
+    volatile uint32_t footer; // h5431BACD
+    uint8_t page_fill[3840];
+} DMA_CH1_PCKT;
 
 struct atca_eo_config {
   int32_t offset[ADC_CHANNELS];

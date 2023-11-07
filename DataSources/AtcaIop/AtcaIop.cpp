@@ -28,6 +28,8 @@
 /*---------------------------------------------------------------------------*/
 #include <math.h>
 #include <fcntl.h>
+#include <sys/mman.h>  // For mmap()
+
 #include <unistd.h> // for close()
 
 /*---------------------------------------------------------------------------*/
@@ -50,6 +52,16 @@ const uint32 ADC_SIMULATOR_N_ADCs = 4u;
 const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
 
+const uint32 RT_PCKT_SIZE = 1024u;
+/* 256 + 3840 = 4096 B (PAGE_SIZE) data packet*/
+typedef struct _DMA_CH1_PCKT {
+    uint32 head_time_cnt;
+    uint32 header; // h5431BACD
+    int32 channel[60]; // 24 56
+    uint32 foot_time_cnt;
+    uint32 footer; // h5431BACD
+    uint8 page_fill[3840];
+} DMA_CH1_PCKT;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -57,9 +69,12 @@ const float64 ADC_SIMULATOR_PI = 3.14159265359;
 /*---------------------------------------------------------------------------*/
 namespace MARTe {
 AtcaIop::AtcaIop() :
-        DataSourceI(), EmbeddedServiceMethodBinderI(), executor(*this) {
+        DataSourceI(), MessageI(), EmbeddedServiceMethodBinderI(), executor(*this) {
     boardId = 2u;
     boardFileDescriptor = -1;
+    boardDmaDescriptor = -1;
+    mappedDmaBase = NULL;
+    mappedDmaSize = 0u;
     deviceName = "";
     lastTimeTicks = 0u;
     sleepTimeTicks = 0u;
@@ -89,6 +104,19 @@ AtcaIop::~AtcaIop() {
             REPORT_ERROR(ErrorManagement::FatalError, "Could not stop SingleThreadService.");
         }
     }
+    int rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_DISABLE);
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_DISABLE);
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_RESET);
+    // some waiting..
+    float32 sleepTime = static_cast<float32>(static_cast<float64>(1000) * HighResolutionTimer::Period());
+    Sleep::NoMore(sleepTime);
+    if (boardDmaDescriptor != -1) {
+        close(boardDmaDescriptor);
+        REPORT_ERROR(ErrorManagement::Information, "Close device %d OK", boardDmaDescriptor);
+    }
+    uint32 statusReg = 0;
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
+    REPORT_ERROR(ErrorManagement::Information, "Device Status Reg %d, 0x%x", rc, statusReg);
     if (boardFileDescriptor != -1) {
         close(boardFileDescriptor);
         REPORT_ERROR(ErrorManagement::Information, "Close device %d OK", boardFileDescriptor);
@@ -176,6 +204,11 @@ bool AtcaIop::Initialise(StructuredDataI& data) {
         ok = data.Read("SignalsGains", readVector);
     }
 
+    chopperPeriod = 1000;
+    if (!data.Read("ChopperPeriod", chopperPeriod)) {
+        REPORT_ERROR(ErrorManagement::Warning, "ChopperPeriod not specified. Using default: %d", chopperPeriod);
+    }
+
     adcFrequency = 2e6;
     if (!data.Read("ADCFrequency", adcFrequency)) {
         REPORT_ERROR(ErrorManagement::Warning, "ADCFrequency not specified. Using default: %d", adcFrequency);
@@ -255,6 +288,93 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
         else
             REPORT_ERROR(ErrorManagement::Information, "Open device %s OK", fullDeviceName);
     }
+    StreamString fullDmaName;
+    if (ok) {
+        ok = fullDmaName.Printf("%s_dma_ch1_%d", deviceName.Buffer(), boardId);
+    }
+    if (ok) {
+        ok = fullDmaName.Seek(0LLU);
+    }
+    if (ok) {
+        boardDmaDescriptor = open(fullDmaName.Buffer(), O_RDWR);
+        ok = (boardDmaDescriptor > -1);
+        if (!ok) {
+            REPORT_ERROR_PARAMETERS(ErrorManagement::ParametersError, "Could not open DMA device %s", fullDmaName);
+        }
+        else
+            REPORT_ERROR(ErrorManagement::Information, "Open device %s OK", fullDmaName);
+    }
+
+    //mappedDmaBase = (int32 *) mmap(0,  getpagesize() * NUMBER_OF_BUFFERS,
+    mappedDmaBase = (int32 *) mmap(0,  4096u * NUMBER_OF_BUFFERS,
+            PROT_READ, MAP_SHARED, boardDmaDescriptor, 0);
+    if (mappedDmaBase == MAP_FAILED){
+        ok = false;
+        REPORT_ERROR(ErrorManagement::FatalError, "Error Mapping Device %s", fullDmaName);
+    }
+    mappedDmaSize = getpagesize();
+
+    uint32 statusReg = 0;
+    int rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_RESET);
+    //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_DISABLE);
+    if (chopperPeriod > 0)
+    {
+        uint32 chopCounter = (chopperPeriod) << 16;
+        chopCounter &= 0xFFFF0000;
+        chopCounter |= chopperPeriod / 2;
+
+        rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPS_CHOP_COUNTERS, &chopCounter);
+        //read chopper
+        chopCounter = 0;
+        rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_CHOP_COUNTERS, &chopCounter);
+        //std::cout << "Chopper counter 0x" << std::hex << chopCounter << std::endl;
+
+        rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_CHOP_ON);
+        REPORT_ERROR(ErrorManagement::Information, "Chop ON 0x%x", chopCounter);
+    }
+    else
+        rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_CHOP_OFF);
+
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
+    if (rc) {
+        ok = false;
+        REPORT_ERROR(ErrorManagement::FatalError, "Device Status Reg %d, 0x%x", rc, statusReg);
+    }
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_ACQ_ENABLE);
+    //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_DISABLE);
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_ACQ_DISABLE);
+
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_IRQ_DISABLE);
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_ENABLE);
+    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
+    Sleep::Busy(0.001); // in Sec
+    int32 currentDMA = CurrentBufferIndex();
+    if(currentDMA < 0){
+        REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
+    }
+    //float32 sleepTime = static_cast<float32>(static_cast<float64>(400000) * HighResolutionTimer::Period());
+    //Sleep::Busy::Sec(1.5e-3);
+    DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
+    for (uint32 i = 0u; i < NUMBER_OF_BUFFERS; i++) {
+        REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x", i, 
+                mappedDmaBase[i*RT_PCKT_SIZE], mappedDmaBase[i*RT_PCKT_SIZE + 1], mappedDmaBase[i*RT_PCKT_SIZE + 2 ], mappedDmaBase[i*RT_PCKT_SIZE + 3],
+                mappedDmaBase[i*RT_PCKT_SIZE + 4], mappedDmaBase[i*RT_PCKT_SIZE + 5], mappedDmaBase[i*RT_PCKT_SIZE + 6 ], mappedDmaBase[i*RT_PCKT_SIZE + 7]);
+        //REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, p0x%x", i, mappedDmaBase[i*RT_PCKT_SIZE], pdma[i].head_time_cnt);
+    }
+    //REPORT_ERROR(ErrorManagement::Warning, "SleepTime %d, count:0x%x", sleepTime, pdma[3].head_time_cnt);
+    /* 
+    currentDMA = CurrentBufferIndex();
+    if(currentDMA < 0){
+        REPORT_ERROR(ErrorManagement::Warning, 
+                "AtcaIop::CurrentBufferIndex: Sleep %f, Returned %d", sleepTime, currentDMA);
+    }
+
+    DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
+    uint32* oldestBufferHeader = &pdma[0].head_time_cnt;
+    REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::pDma: H: %d, F:%d",
+            pdma[0].head_time_cnt,
+            pdma[0].foot_time_cnt);
+    */
     uint32 nOfFunctions = GetNumberOfFunctions();
     float32 cycleFrequency = -1.0F;
     bool frequencyFound = false;
@@ -329,6 +449,8 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
         timerPeriodUsecTime = static_cast<uint32>(periodUsec);
         float64 sleepTimeT = (static_cast<float64>(HighResolutionTimer::Frequency()) / cycleFrequency);
         sleepTimeTicks = static_cast<uint64>(sleepTimeT);
+        REPORT_ERROR(ErrorManagement::Information, 
+                "The timer will be set using a sleepTimeTicks of %d", sleepTimeTicks);
     }
     if (ok) {
         float32 totalNumberOfSamplesPerSecond = (static_cast<float32>(adcSamplesPerCycle) * cycleFrequency);
@@ -427,7 +549,13 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     //Sleep until the next period. Cannot be < 0 due to while(lastTimeTicks < startTicks) above
     uint64 sleepTicksCorrection = (startTicks - lastTimeTicks);
     uint64 deltaTicks = sleepTimeTicks - sleepTicksCorrection;
-
+/*
+    int32 currentDMA = CurrentBufferIndex();
+    if(currentDMA < 0){
+        REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
+        //return False;
+    }
+    */
     if (sleepNature == Busy) {
         if (sleepPercentage == 0u) {
             while ((HighResolutionTimer::Counter() - startTicks) < deltaTicks) {
@@ -446,6 +574,7 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     }
     lastTimeTicks = HighResolutionTimer::Counter();
 
+
     ErrorManagement::ErrorType err = synchSem.Post();
     counterAndTimer[0] += nCycles;
     counterAndTimer[1] = counterAndTimer[0] * timerPeriodUsecTime;
@@ -454,7 +583,7 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     float64 t = counterAndTimer[1];
     t /= 1e6;
     for (s=0u; s<adcSamplesPerCycle; s++) {
-        for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
+        for (k=0u; k<ADC_SIMULATOR_N_ADCs -2 ; k++) {
             float32 value = signalsGains[k] * sin(2 * ADC_SIMULATOR_PI * signalsFrequencies[k] * t);
             adcValues[k][s] = static_cast<uint32>(value);
 #if 0
@@ -467,6 +596,7 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
         }
         t += adcPeriod;
     }
+    //adcValues[3][0] = currentDMA;
     return err;
 }
 
@@ -481,6 +611,53 @@ uint32 AtcaIop::GetStackSize() const {
 uint32 AtcaIop::GetSleepPercentage() const {
     return sleepPercentage;
 }
+
+int32 AtcaIop::CurrentBufferIndex() const {
+        DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
+        uint32* oldestBufferHeader = &pdma[0].head_time_cnt;
+        //  volatile uint64_t head_time_cnt;
+        int oldestBufferIdx = 0u;
+    //lastTimeTicks = 
+        // int64  stopAcquisition    = HighResolutionTimer::Counter()  + dataAcquisitionUsecTimeOut;
+        // if(!cdb.ReadInt32(temp, "DataAcquisitionUsecTimeOut",1000)){
+        uint64  stopPollTicks    = HighResolutionTimer::Counter()  + 100000u;// * sleepTimeTicks;
+        // check which one is the oldest buffer
+        uint32 dmaIndex = 0u;
+        for (dmaIndex = 1u; dmaIndex < NUMBER_OF_BUFFERS; dmaIndex++) {
+            // Pointer to the header
+            uint32 *header = &pdma[dmaIndex].head_time_cnt;
+            //uint32 *header     = (uint32 *)dmaBuffers[dmaIndex];
+            if (*header < *oldestBufferHeader) {
+                oldestBufferHeader = header;
+                oldestBufferIdx  = dmaIndex;
+            }
+        }
+        volatile uint32 * oldestBufferFooter = &pdma[oldestBufferIdx].foot_time_cnt;
+        uint32 oldestTimeMark = pdma[oldestBufferIdx].foot_time_cnt;
+        //uint32 oldestTimeMark = *oldestBufferFooter;
+        //timespec startTime, actualTime;
+        // Wait for new data: If the data transfer is not in progress it means that the new data will
+        // If the data transfer is not in progress it means that the new data will
+        // be stored in the oldest buffer.
+        uint64 actualTime = HighResolutionTimer::Counter();
+        while (oldestTimeMark == *oldestBufferFooter) {
+            if(actualTime > stopPollTicks) {
+                return -(actualTime - stopPollTicks);
+                //return -1;
+            }
+            actualTime = HighResolutionTimer::Counter();
+        }
+
+        // be stored in the oldest buffer.
+        if(*oldestBufferHeader == oldestTimeMark)
+        {
+            //currentBufferIdx = oldestBufferIdx;
+            //currentMasterHeader   = pdma[currentBufferIdx].head_time_cnt;
+            return oldestBufferIdx;
+        }
+        return -2;
+
+    }
 
 CLASS_REGISTER(AtcaIop, "1.0")
 
