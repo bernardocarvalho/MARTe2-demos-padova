@@ -96,6 +96,16 @@ AtcaIop::AtcaIop() :
 
 /*lint -e{1551} the destructor must guarantee that the Timer SingleThreadService is stopped.*/
 AtcaIop::~AtcaIop() {
+    if (boardFileDescriptor != -1) {
+        ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_DISABLE);
+        ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_DISABLE);
+        uint32 statusReg = 0;
+        //REPORT_ERROR(ErrorManagement::Information, " Close Device Status Reg %d, 0x%x", rc, statusReg);
+       ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
+        //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_RESET);
+        close(boardFileDescriptor);
+        REPORT_ERROR(ErrorManagement::Information, "Close device %d OK. Status Reg 0x%x,", boardFileDescriptor, statusReg);
+    }
     if (!synchSem.Post()) {
         REPORT_ERROR(ErrorManagement::FatalError, "Could not post EventSem.");
     }
@@ -104,22 +114,12 @@ AtcaIop::~AtcaIop() {
             REPORT_ERROR(ErrorManagement::FatalError, "Could not stop SingleThreadService.");
         }
     }
-    int rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_DISABLE);
-    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_DISABLE);
-    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_RESET);
     // some waiting..
-    float32 sleepTime = static_cast<float32>(static_cast<float64>(1000) * HighResolutionTimer::Period());
-    Sleep::NoMore(sleepTime);
+    //float32 sleepTime = static_cast<float32>(static_cast<float64>(1000) * HighResolutionTimer::Period());
+    //Sleep::NoMore(sleepTime);
     if (boardDmaDescriptor != -1) {
         close(boardDmaDescriptor);
         REPORT_ERROR(ErrorManagement::Information, "Close device %d OK", boardDmaDescriptor);
-    }
-    uint32 statusReg = 0;
-    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
-    REPORT_ERROR(ErrorManagement::Information, "Device Status Reg %d, 0x%x", rc, statusReg);
-    if (boardFileDescriptor != -1) {
-        close(boardFileDescriptor);
-        REPORT_ERROR(ErrorManagement::Information, "Close device %d OK", boardFileDescriptor);
     }
     uint32 k;
     for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
@@ -342,12 +342,13 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     }
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_ACQ_ENABLE);
     //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_DISABLE);
+    Sleep::Busy(0.001); // in Sec
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_ACQ_DISABLE);
 
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_IRQ_DISABLE);
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_ENABLE);
-    rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
-    Sleep::Busy(0.001); // in Sec
+    //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
+    Sleep::Busy(0.002); // in Sec
     int32 currentDMA = CurrentBufferIndex();
     if(currentDMA < 0){
         REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
@@ -358,8 +359,12 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     for (uint32 i = 0u; i < NUMBER_OF_BUFFERS; i++) {
         REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x", i, 
                 mappedDmaBase[i*RT_PCKT_SIZE], mappedDmaBase[i*RT_PCKT_SIZE + 1], mappedDmaBase[i*RT_PCKT_SIZE + 2 ], mappedDmaBase[i*RT_PCKT_SIZE + 3],
-                mappedDmaBase[i*RT_PCKT_SIZE + 4], mappedDmaBase[i*RT_PCKT_SIZE + 5], mappedDmaBase[i*RT_PCKT_SIZE + 6 ], mappedDmaBase[i*RT_PCKT_SIZE + 7]);
-        //REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, p0x%x", i, mappedDmaBase[i*RT_PCKT_SIZE], pdma[i].head_time_cnt);
+                mappedDmaBase[i*RT_PCKT_SIZE + 4], mappedDmaBase[i*RT_PCKT_SIZE + 5], mappedDmaBase[i*RT_PCKT_SIZE + 6 ], mappedDmaBase[i*RT_PCKT_SIZE + 62]);
+        REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, h0x%x, f0x%x", i, mappedDmaBase[i*RT_PCKT_SIZE], pdma[i].head_time_cnt, pdma[i].foot_time_cnt);
+    }
+    currentDMA = CurrentBufferIndex();
+    if(currentDMA < 0){
+        REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
     }
     //REPORT_ERROR(ErrorManagement::Warning, "SleepTime %d, count:0x%x", sleepTime, pdma[3].head_time_cnt);
     /* 
@@ -614,7 +619,7 @@ uint32 AtcaIop::GetSleepPercentage() const {
 
 int32 AtcaIop::CurrentBufferIndex() const {
         DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
-        uint32* oldestBufferHeader = &pdma[0].head_time_cnt;
+        uint32 oldestBufferHeader = pdma[0].head_time_cnt;
         //  volatile uint64_t head_time_cnt;
         int oldestBufferIdx = 0u;
     //lastTimeTicks = 
@@ -627,15 +632,14 @@ int32 AtcaIop::CurrentBufferIndex() const {
             // Pointer to the header
             uint32 *header = &pdma[dmaIndex].head_time_cnt;
             //uint32 *header     = (uint32 *)dmaBuffers[dmaIndex];
-            if (*header < *oldestBufferHeader) {
-                oldestBufferHeader = header;
+            if (*header < oldestBufferHeader) {
+                oldestBufferHeader = *header;
                 oldestBufferIdx  = dmaIndex;
             }
         }
         volatile uint32 * oldestBufferFooter = &pdma[oldestBufferIdx].foot_time_cnt;
         uint32 oldestTimeMark = pdma[oldestBufferIdx].foot_time_cnt;
         //uint32 oldestTimeMark = *oldestBufferFooter;
-        //timespec startTime, actualTime;
         // Wait for new data: If the data transfer is not in progress it means that the new data will
         // If the data transfer is not in progress it means that the new data will
         // be stored in the oldest buffer.
@@ -647,9 +651,11 @@ int32 AtcaIop::CurrentBufferIndex() const {
             }
             actualTime = HighResolutionTimer::Counter();
         }
-
-        // be stored in the oldest buffer.
-        if(*oldestBufferHeader == oldestTimeMark)
+        // check new packet
+        uint32  headTimeMark = pdma[oldestBufferIdx].head_time_cnt;
+        uint32  footTimeMark = pdma[oldestBufferIdx].foot_time_cnt;
+       // if(*oldestBufferHeader == oldestTimeMark)
+        if(headTimeMark == footTimeMark)
         {
             //currentBufferIdx = oldestBufferIdx;
             //currentMasterHeader   = pdma[currentBufferIdx].head_time_cnt;
