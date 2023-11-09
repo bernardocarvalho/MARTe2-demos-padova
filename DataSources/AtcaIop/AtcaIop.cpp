@@ -209,7 +209,7 @@ bool AtcaIop::Initialise(StructuredDataI& data) {
         REPORT_ERROR(ErrorManagement::Warning, "ChopperPeriod not specified. Using default: %d", chopperPeriod);
     }
 
-    adcFrequency = 2e6;
+    adcFrequency = 2e5;
     if (!data.Read("ADCFrequency", adcFrequency)) {
         REPORT_ERROR(ErrorManagement::Warning, "ADCFrequency not specified. Using default: %d", adcFrequency);
     }
@@ -348,8 +348,8 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_IRQ_DISABLE);
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_ENABLE);
     //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
-    Sleep::Busy(0.002); // in Sec
-    int32 currentDMA = CurrentBufferIndex();
+    Sleep::Busy(0.0011); // in Sec
+    int32 currentDMA = CurrentBufferIndex(200);
     if(currentDMA < 0){
         REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
     }
@@ -357,15 +357,19 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     //Sleep::Busy::Sec(1.5e-3);
     DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
     for (uint32 i = 0u; i < NUMBER_OF_BUFFERS; i++) {
-        REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x", i, 
-                mappedDmaBase[i*RT_PCKT_SIZE], mappedDmaBase[i*RT_PCKT_SIZE + 1], mappedDmaBase[i*RT_PCKT_SIZE + 2 ], mappedDmaBase[i*RT_PCKT_SIZE + 3],
-                mappedDmaBase[i*RT_PCKT_SIZE + 4], mappedDmaBase[i*RT_PCKT_SIZE + 5], mappedDmaBase[i*RT_PCKT_SIZE + 6 ], mappedDmaBase[i*RT_PCKT_SIZE + 62]);
-        REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, h0x%x, f0x%x", i, mappedDmaBase[i*RT_PCKT_SIZE], pdma[i].head_time_cnt, pdma[i].foot_time_cnt);
+        //REPORT_ERROR(ErrorManagement::Warning, "b:%d, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x, 0x%x", i, 
+        //        mappedDmaBase[i*RT_PCKT_SIZE], mappedDmaBase[i*RT_PCKT_SIZE + 1], mappedDmaBase[i*RT_PCKT_SIZE + 2 ], mappedDmaBase[i*RT_PCKT_SIZE + 3],
+        //        mappedDmaBase[i*RT_PCKT_SIZE + 4], mappedDmaBase[i*RT_PCKT_SIZE + 5], mappedDmaBase[i*RT_PCKT_SIZE + 6 ], mappedDmaBase[i*RT_PCKT_SIZE + 62]);
+        REPORT_ERROR(ErrorManagement::Warning, "b:%d, h0x%x, f0x%x", i, pdma[i].head_time_cnt, pdma[i].foot_time_cnt);
     }
-    currentDMA = CurrentBufferIndex();
-    if(currentDMA < 0){
-        REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
+    for (uint32 i = 0u; i < 10; i++) {
+        int currentIdx = GetOldestBufferIdx(); //CurrentBufferIndex(900);
+        currentDMA = CurrentBufferIndex(110);
+        //if(currentDMA < 0){
+            REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: %d, Idx: %d", currentDMA, currentIdx);
+        //}
     }
+    REPORT_ERROR(ErrorManagement::Information, "AtcaIop::CurrentBufferIndex: %d", currentDMA);
     //REPORT_ERROR(ErrorManagement::Warning, "SleepTime %d, count:0x%x", sleepTime, pdma[3].head_time_cnt);
     /* 
     currentDMA = CurrentBufferIndex();
@@ -554,15 +558,15 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     //Sleep until the next period. Cannot be < 0 due to while(lastTimeTicks < startTicks) above
     uint64 sleepTicksCorrection = (startTicks - lastTimeTicks);
     uint64 deltaTicks = sleepTimeTicks - sleepTicksCorrection;
-/*
-    int32 currentDMA = CurrentBufferIndex();
-    if(currentDMA < 0){
-        REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
+    //int32 currentDMA = CurrentBufferIndex(110);
+    volatile int32 currentDMA = 0u;
+   // if(currentDMA < 0){
+     //   REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
         //return False;
-    }
-    */
+    //}
     if (sleepNature == Busy) {
         if (sleepPercentage == 0u) {
+            currentDMA = CurrentBufferIndex(150);
             while ((HighResolutionTimer::Counter() - startTicks) < deltaTicks) {
             }
         }
@@ -601,7 +605,14 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
         }
         t += adcPeriod;
     }
-    //adcValues[3][0] = currentDMA;
+    //int32 currentDMA = CurrentBufferIndex(110);
+    //adcValues[2][0] = CurrentBufferIndex(110);
+    //adcValues[2][0] = static_cast<uint32>(lastTimeTicks);
+    //adcValues[3][1] += 1u;
+    //adcValues[3][0] = GetOldestBufferIdx();
+    adcValues[3][0] = static_cast<uint32>(GetOldestBufferIdx());
+    if (currentDMA >= 0)
+        adcValues[2][0] = currentDMA;
     return err;
 }
 
@@ -617,7 +628,22 @@ uint32 AtcaIop::GetSleepPercentage() const {
     return sleepPercentage;
 }
 
-int32 AtcaIop::CurrentBufferIndex() const {
+uint32 AtcaIop::GetOldestBufferIdx() const {
+        volatile uint32 oldestBufferHeader = mappedDmaBase[0];
+        uint32 oldestBufferIdx = 0u;
+
+        volatile uint32 header = mappedDmaBase[0];
+        for (uint32 dmaIndex = 1u; dmaIndex < NUMBER_OF_BUFFERS; dmaIndex++) {
+            header = mappedDmaBase[dmaIndex * RT_PCKT_SIZE];
+            if (header < oldestBufferHeader) {
+                oldestBufferHeader = header;
+                oldestBufferIdx  = dmaIndex;
+            }
+        }
+        return oldestBufferIdx;
+}
+
+int32 AtcaIop::CurrentBufferIndex(uint64 waitLimitUs) const {
         DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
         uint32 oldestBufferHeader = pdma[0].head_time_cnt;
         //  volatile uint64_t head_time_cnt;
@@ -625,7 +651,6 @@ int32 AtcaIop::CurrentBufferIndex() const {
     //lastTimeTicks = 
         // int64  stopAcquisition    = HighResolutionTimer::Counter()  + dataAcquisitionUsecTimeOut;
         // if(!cdb.ReadInt32(temp, "DataAcquisitionUsecTimeOut",1000)){
-        uint64  stopPollTicks    = HighResolutionTimer::Counter()  + 100000u;// * sleepTimeTicks;
         // check which one is the oldest buffer
         uint32 dmaIndex = 0u;
         for (dmaIndex = 1u; dmaIndex < NUMBER_OF_BUFFERS; dmaIndex++) {
@@ -637,13 +662,14 @@ int32 AtcaIop::CurrentBufferIndex() const {
                 oldestBufferIdx  = dmaIndex;
             }
         }
-        volatile uint32 * oldestBufferFooter = &pdma[oldestBufferIdx].foot_time_cnt;
-        uint32 oldestTimeMark = pdma[oldestBufferIdx].foot_time_cnt;
+        uint32 * oldestBufferFooter = &pdma[oldestBufferIdx].foot_time_cnt;
+        volatile uint32 oldestTimeMark = pdma[oldestBufferIdx].foot_time_cnt;// No optimize
         //uint32 oldestTimeMark = *oldestBufferFooter;
         // Wait for new data: If the data transfer is not in progress it means that the new data will
         // If the data transfer is not in progress it means that the new data will
         // be stored in the oldest buffer.
         uint64 actualTime = HighResolutionTimer::Counter();
+        uint64  stopPollTicks  = actualTime  + waitLimitUs * 1000;// 200000u;//  ns * sleepTimeTicks;
         while (oldestTimeMark == *oldestBufferFooter) {
             if(actualTime > stopPollTicks) {
                 return -(actualTime - stopPollTicks);

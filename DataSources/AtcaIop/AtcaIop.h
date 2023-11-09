@@ -218,7 +218,7 @@ namespace MARTe {
             /**
              * Find the currentDMABufferIndex and synchronize on data arrival
              */
-            int32  CurrentBufferIndex() const;
+            int32 CurrentBufferIndex(uint64 waitLimitUs) const;
 
         private:
             /**
@@ -354,6 +354,7 @@ namespace MARTe {
              *  Find the latest completed buffer without synchronization
              */
             int32 GetLatestBufferIndex() const;
+            uint32 GetOldestBufferIdx() const;
 
             /**
              * Filter to receive the RPC which ...
