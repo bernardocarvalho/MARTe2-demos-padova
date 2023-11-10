@@ -346,6 +346,10 @@ namespace MARTe {
             uint8 currentBufferIdx;
 
             /**
+             * The oldest written DMA buffer index
+             */
+            uint8 oldestBufferIdx;
+            /**
              * The last read buffer index
              */
             uint8 lastBufferIdx;
@@ -355,9 +359,10 @@ namespace MARTe {
              */
             int32 GetLatestBufferIndex() const;
             uint32 GetOldestBufferIdx() const;
+            int32 PollDma(uint64 waitLimitTicks) const;
 
             /**
-             * Filter to receive the RPC which ...
+             * filter to receive the RPC which ...
              */
             ReferenceT<RegisteredMethodsMessageFilter> filter;
 
