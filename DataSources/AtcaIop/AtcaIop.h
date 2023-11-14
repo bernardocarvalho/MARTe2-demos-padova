@@ -264,9 +264,13 @@ namespace MARTe {
             uint32 counterAndTimer[2];
 
             /**
+             * ADC Simul values
+             */
+            int32 *adcSimValues[4];
+            /**
              * ADC values
              */
-            int32 *adcValues[4];
+            int32 adcValues[4];
 
             /**
              * Number of samples to read on each cycle

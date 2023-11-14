@@ -48,8 +48,10 @@ namespace MARTe {
 /**
  * The number of signals (2 time signals + 4 ADCs).
  */
-const uint32 ADC_SIMULATOR_N_ADCs = 4u; 
-const uint32 ATCA_IOP_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
+const uint32 ADC_SIMULATOR_N_ADCs = 4u;
+const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
+const uint32 ATCA_IOP_N_ADCs = 2u;
+const uint32 ATCA_IOP_N_SIGNALS =ATCA_IOP_N_ADCs + ADC_SIMULATOR_N_SIGNALS;
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
 
 const uint32 RT_PCKT_SIZE = 1024u;
@@ -86,8 +88,11 @@ AtcaIop::AtcaIop() :
     sleepPercentage = 0u;
     adcPeriod = 0.;
     uint32 k;
+    for (k=0u; k<ATCA_IOP_N_ADCs; k++) {
+        adcValues[k] = 0u;
+    }
     for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
-        adcValues[k] = NULL_PTR(int32 *);
+        adcSimValues[k] = NULL_PTR(int32 *);
     }
 
     if (!synchSem.Create()) {
@@ -127,8 +132,8 @@ AtcaIop::~AtcaIop() {
     }
     uint32 k;
     for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
-        if (adcValues[k] != NULL_PTR(int32 *)) {
-            delete [] adcValues[k];
+        if (adcSimValues[k] != NULL_PTR(int32 *)) {
+            delete [] adcSimValues[k];
         }
     }
 }
@@ -252,12 +257,13 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     //The DataSource shall have 6 signals. The first two are uint32 (counter and time) and other 4 represent an ADC value as int32
     if (ok) {
         ok = (GetNumberOfSignals() == ATCA_IOP_N_SIGNALS);
+        //ok = (GetNumberOfSignals() == ADC_SIMULATOR_N_SIGNALS);
     }
     if (!ok) {
         REPORT_ERROR(ErrorManagement::ParametersError, "Exactly %d signals shall be configured", ATCA_IOP_N_SIGNALS);
     }
     uint32 i;
-    for (i=0; (i<ATCA_IOP_N_SIGNALS) && (ok); i++) {
+    for (i=0; (i<ADC_SIMULATOR_N_SIGNALS) && (ok); i++) {
         ok = (GetSignalType(i).numberOfBits == 32u);
         if (!ok) {
             REPORT_ERROR(ErrorManagement::ParametersError, "The signal in position %d shall have 32 bits and %d were specified", i, uint16(GetSignalType(i).numberOfBits));
@@ -405,6 +411,7 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
             }
             bool isCounter = false;
             bool isTime = false;
+            bool isAdcSim = false;
             uint32 signalIdx = 0u;
             uint32 nSamples = 0u;
             ok = GetFunctionSignalSamples(InputSignals, functionIdx, i, nSamples);
@@ -420,6 +427,7 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
             if (ok) {
                 isCounter = (signalIdx == 0u);
                 isTime = (signalIdx == 1u);
+                isAdcSim = (signalIdx < 6u);
                 if (isCounter) {
                     if (nSamples > 1u) {
                         ok = false;
@@ -432,7 +440,7 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
                         REPORT_ERROR(ErrorManagement::ParametersError, "The second signal (time) shall have one and only one sample");
                     }
                 }
-                else {
+                else if (isAdcSim) {
                     //How many samples to read for each cycle?
                     if (adcSamplesPerCycle == 0u) {
                         adcSamplesPerCycle = nSamples;
@@ -445,6 +453,7 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
                     }
 
                 }
+                // else {}
             }
         }
     }
@@ -476,7 +485,7 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     if (ok) {
         uint32 k;
         for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
-            adcValues[k] = new int32[adcSamplesPerCycle];
+            adcSimValues[k] = new int32[adcSamplesPerCycle];
         }
     }
 
@@ -496,8 +505,11 @@ bool AtcaIop::GetSignalMemoryBuffer(const uint32 signalIdx, const uint32 bufferI
     else if (signalIdx == 1u) {
         signalAddress = &counterAndTimer[1];
     }
+    else if (signalIdx < ADC_SIMULATOR_N_SIGNALS) {
+        signalAddress = adcSimValues[signalIdx - 2u];
+    }
     else if (signalIdx < ATCA_IOP_N_SIGNALS) {
-        signalAddress = adcValues[signalIdx - 2u];
+        signalAddress = &adcValues[signalIdx - 6u];
     }
     else {
         ok = false;
@@ -597,11 +609,11 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     for (s=0u; s<adcSamplesPerCycle; s++) {
         for (k=0u; k<ADC_SIMULATOR_N_ADCs -2 ; k++) {
             float32 value = signalsGains[k] * sin(2 * ADC_SIMULATOR_PI * signalsFrequencies[k] * t);
-            adcValues[k][s] = static_cast<uint32>(value);
+            adcSimValues[k][s] = static_cast<uint32>(value);
 #if 0
             //if (k == 0){
                 //if (s == (adcSamplesPerCycle - 1)){
-                    REPORT_ERROR(ErrorManagement::FatalError, "adcValues[%d][%d] = %d (%f), signalsGains[%d] = %f signalsFrequencies[%d] = %f t=%f", k, s, adcValues[k][s], value, k, signalsGains[k], k, signalsFrequencies[k], t);
+                    REPORT_ERROR(ErrorManagement::FatalError, "adcSimValues[%d][%d] = %d (%f), signalsGains[%d] = %f signalsFrequencies[%d] = %f t=%f", k, s, adcSimValues[k][s], value, k, signalsGains[k], k, signalsFrequencies[k], t);
                 //}
             //}
 #endif
@@ -614,9 +626,9 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     //adcValues[3][1] += 1u;
     //adcValues[3][0] = GetOldestBufferIdx();
     if (currentDMA >= 0)
-        adcValues[2][0] = oldestBufferIdx;
+        adcSimValues[2][0] = oldestBufferIdx;
     for (s=1u; s < ADC_CHANNELS + 1u; s++) {
-        adcValues[3][s] = mappedDmaBase[oldestBufferIdx * RT_PCKT_SIZE + s] / (1<<14);
+        adcSimValues[3][s] = mappedDmaBase[oldestBufferIdx * RT_PCKT_SIZE + s] / (1<<14);
     }
     return err;
 }
