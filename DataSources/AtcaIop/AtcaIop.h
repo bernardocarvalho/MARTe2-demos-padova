@@ -270,7 +270,7 @@ namespace MARTe {
             /**
              * ADC values
              */
-            int32 adcValues[4];
+            int32 adcValues[16];
 
             /**
              * Number of samples to read on each cycle

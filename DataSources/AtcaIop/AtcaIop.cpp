@@ -50,8 +50,8 @@ namespace MARTe {
  */
 const uint32 ADC_SIMULATOR_N_ADCs = 4u;
 const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
-const uint32 ATCA_IOP_N_ADCs = 2u;
-const uint32 ATCA_IOP_N_SIGNALS =ATCA_IOP_N_ADCs + ADC_SIMULATOR_N_SIGNALS;
+const uint32 ATCA_IOP_N_ADCs = 4u;
+const uint32 ATCA_IOP_N_SIGNALS = ATCA_IOP_N_ADCs + ADC_SIMULATOR_N_SIGNALS;
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
 
 const uint32 RT_PCKT_SIZE = 1024u;
@@ -573,12 +573,7 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     //Sleep until the next period. Cannot be < 0 due to while(lastTimeTicks < startTicks) above
     uint64 sleepTicksCorrection = (startTicks - lastTimeTicks);
     uint64 deltaTicks = sleepTimeTicks - sleepTicksCorrection;
-    //int32 currentDMA = CurrentBufferIndex(110);
     volatile int32 currentDMA = 0u;
-   // if(currentDMA < 0){
-     //   REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
-        //return False;
-    //}
     oldestBufferIdx = GetOldestBufferIdx();
     if (sleepNature == Busy) {
         if (sleepPercentage == 0u) {
@@ -602,8 +597,14 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     ErrorManagement::ErrorType err = synchSem.Post();
     counterAndTimer[0] += nCycles;
     counterAndTimer[1] = counterAndTimer[0] * timerPeriodUsecTime;
+    // Get adc data from DMA packet
     uint32 k;
     uint32 s;
+    for (k=0u; k<ATCA_IOP_N_ADCs ; k++) {
+        adcValues[k] = (mappedDmaBase[oldestBufferIdx * RT_PCKT_SIZE + 1
+            + k] ) / (1<<14);
+    }
+    
     float64 t = counterAndTimer[1];
     t /= 1e6;
     for (s=0u; s<adcSamplesPerCycle; s++) {
