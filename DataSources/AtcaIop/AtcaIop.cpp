@@ -50,7 +50,7 @@ namespace MARTe {
  */
 const uint32 ADC_SIMULATOR_N_ADCs = 4u;
 const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
-const uint32 ATCA_IOP_N_ADCs = 4u;
+const uint32 ATCA_IOP_N_ADCs = 8u;
 const uint32 ATCA_IOP_N_SIGNALS = ATCA_IOP_N_ADCs + ADC_SIMULATOR_N_SIGNALS;
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
 
@@ -358,7 +358,7 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_ENABLE);
     //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
     Sleep::Busy(0.0011); // in Sec
-    int32 currentDMA = CurrentBufferIndex(200);
+    int32 currentDMA = 0u;// = CurrentBufferIndex(200);
     if(currentDMA < 0){
         REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: Returned %d", currentDMA);
     }
@@ -371,28 +371,13 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
         //        mappedDmaBase[i*RT_PCKT_SIZE + 4], mappedDmaBase[i*RT_PCKT_SIZE + 5], mappedDmaBase[i*RT_PCKT_SIZE + 6 ], mappedDmaBase[i*RT_PCKT_SIZE + 62]);
         REPORT_ERROR(ErrorManagement::Warning, "b:%d, h0x%x, f0x%x", i, pdma[i].head_time_cnt, pdma[i].foot_time_cnt);
     }
-    for (uint32 i = 0u; i < 10; i++) {
-        oldestBufferIdx = GetOldestBufferIdx(); //CurrentBufferIndex(900);
-        currentDMA = PollDma(HighResolutionTimer::Counter() + 2000000); //  wait max 2ms
-        //if(currentDMA < 0){
-            REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: %d, Idx: %d", currentDMA, oldestBufferIdx);
-        //}
+    for (uint32 i = 0u; i < 1; i++) {
+        oldestBufferIdx = GetOldestBufferIdx();
+        currentDMA = PollDma(HighResolutionTimer::Counter() + 2000000u); //  wait max 2ms
+        REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::CurrentBufferIndex: %d, Idx: %d", currentDMA, oldestBufferIdx);
     }
     REPORT_ERROR(ErrorManagement::Information, "AtcaIop::CurrentBufferIndex: %d", currentDMA);
     //REPORT_ERROR(ErrorManagement::Warning, "SleepTime %d, count:0x%x", sleepTime, pdma[3].head_time_cnt);
-    /* 
-    currentDMA = CurrentBufferIndex();
-    if(currentDMA < 0){
-        REPORT_ERROR(ErrorManagement::Warning, 
-                "AtcaIop::CurrentBufferIndex: Sleep %f, Returned %d", sleepTime, currentDMA);
-    }
-
-    DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
-    uint32* oldestBufferHeader = &pdma[0].head_time_cnt;
-    REPORT_ERROR(ErrorManagement::Warning, "AtcaIop::pDma: H: %d, F:%d",
-            pdma[0].head_time_cnt,
-            pdma[0].foot_time_cnt);
-    */
     uint32 nOfFunctions = GetNumberOfFunctions();
     float32 cycleFrequency = -1.0F;
     bool frequencyFound = false;
@@ -470,8 +455,8 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
         timerPeriodUsecTime = static_cast<uint32>(periodUsec);
         float64 sleepTimeT = (static_cast<float64>(HighResolutionTimer::Frequency()) / cycleFrequency);
         sleepTimeTicks = static_cast<uint64>(sleepTimeT);
-        REPORT_ERROR(ErrorManagement::Information, 
-                "The timer will be set using a sleepTimeTicks of %d", sleepTimeTicks);
+        REPORT_ERROR(ErrorManagement::Information,
+                "The timer will be set using a sleepTimeTicks of %d (ns)", sleepTimeTicks);
     }
     if (ok) {
         float32 totalNumberOfSamplesPerSecond = (static_cast<float32>(adcSamplesPerCycle) * cycleFrequency);
@@ -577,7 +562,7 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     oldestBufferIdx = GetOldestBufferIdx();
     if (sleepNature == Busy) {
         if (sleepPercentage == 0u) {
-            currentDMA = PollDma(startTicks + deltaTicks + 100000);
+            currentDMA = PollDma(startTicks + deltaTicks + 100000u);
             //while ((HighResolutionTimer::Counter() - startTicks) < deltaTicks) {
             //}
         }
@@ -621,8 +606,6 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
         }
         t += adcPeriod;
     }
-    //int32 currentDMA = CurrentBufferIndex(110);
-    //adcValues[2][0] = CurrentBufferIndex(110);
     //adcValues[2][0] = static_cast<uint32>(lastTimeTicks);
     //adcValues[3][1] += 1u;
     //adcValues[3][0] = GetOldestBufferIdx();
@@ -683,7 +666,9 @@ uint32 AtcaIop::GetOldestBufferIdx() const {
         return buffIdx;
 }
 
+/*
 int32 AtcaIop::CurrentBufferIndex(uint64 waitLimitUs) const {
+    int32 AtcaIop::CurrentBufferIndex(uint64 waitLimitUs) const {
         DMA_CH1_PCKT* pdma = (DMA_CH1_PCKT *) mappedDmaBase ;
         uint32 oldestBufferHeader = pdma[0].head_time_cnt;
         //  volatile uint64_t head_time_cnt;
@@ -730,7 +715,7 @@ int32 AtcaIop::CurrentBufferIndex(uint64 waitLimitUs) const {
         return -2;
 
     }
-
+*/
 CLASS_REGISTER(AtcaIop, "1.0")
 
 }

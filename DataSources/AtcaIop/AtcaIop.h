@@ -218,7 +218,7 @@ namespace MARTe {
             /**
              * Find the currentDMABufferIndex and synchronize on data arrival
              */
-            int32 CurrentBufferIndex(uint64 waitLimitUs) const;
+//            int32 CurrentBufferIndex(uint64 waitLimitUs) const;
 
         private:
             /**
