@@ -51,8 +51,9 @@ namespace MARTe {
 const uint32 ADC_SIMULATOR_N_ADCs = 4u;
 const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
 const uint32 ATCA_IOP_N_ADCs = 8u;
-const uint32 ATCA_IOP_N_INTEGRALS = 2u;
-const uint32 ATCA_IOP_N_SIGNALS = ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS + ADC_SIMULATOR_N_SIGNALS;
+const uint32 ATCA_IOP_N_INTEGRALS = 8u;
+const uint32 ATCA_IOP_N_SIGNALS = (ATCA_IOP_N_ADCs +
+    ATCA_IOP_N_INTEGRALS + ADC_SIMULATOR_N_SIGNALS);
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
 const uint32 IOP_ADC_OFFSET = 1u;
 const uint32 IOP_ADC_INTEG_OFFSET = 16u;  // in 64 bit words
@@ -235,6 +236,10 @@ bool AtcaIop::Initialise(StructuredDataI& data) {
         if (!ok) {
             REPORT_ERROR(ErrorManagement::ParametersError, "Exactly %d elements shall be defined in the array ElectricalOffsets", ATCA_IOP_N_ADCs);
         }
+    }
+    if (ok) {
+        Vector<int32> readVector(&electricalOffsets[0u], numberOfElements);
+        ok = data.Read("ElectricalOffsets", readVector);
     }
 
     chopperPeriod = 1000;

@@ -1,8 +1,7 @@
 #!/bin/bash
 #Arguments -f FILENAME -m MESSAGE | -s STATE [-d cgdb|strace]
 # Adjust here MARTe2 instalation folders
-MARTe2_HOME=/opt/MARTe2-git
-# MARTe2_HOME=$HOME/git-repos
+MARTe2_HOME=/opt/marte
 #
 MARTe2_DIR=$MARTe2_HOME/MARTe2
 MARTe2_Components_DIR=$MARTe2_HOME/MARTe2-components
