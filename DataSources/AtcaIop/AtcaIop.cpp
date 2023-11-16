@@ -51,10 +51,15 @@ namespace MARTe {
 const uint32 ADC_SIMULATOR_N_ADCs = 4u;
 const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
 const uint32 ATCA_IOP_N_ADCs = 8u;
-const uint32 ATCA_IOP_N_SIGNALS = ATCA_IOP_N_ADCs + ADC_SIMULATOR_N_SIGNALS;
+const uint32 ATCA_IOP_N_INTEGRALS = 2u;
+const uint32 ATCA_IOP_N_SIGNALS = ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS + ADC_SIMULATOR_N_SIGNALS;
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
+const uint32 IOP_ADC_OFFSET = 1u;
+const uint32 IOP_ADC_INTEG_OFFSET = 16u;  // in 64 bit words
 
 const uint32 RT_PCKT_SIZE = 1024u;
+const uint32 RT_PCKT64_SIZE = 512u; // In 64 bit words
+
 /* 256 + 3840 = 4096 B (PAGE_SIZE) data packet*/
 typedef struct _DMA_CH1_PCKT {
     uint32 head_time_cnt;
@@ -77,6 +82,7 @@ AtcaIop::AtcaIop() :
     boardDmaDescriptor = -1;
     mappedDmaBase = NULL;
     mappedDmaSize = 0u;
+    isMaster = 0u;
     oldestBufferIdx = 0u;
     deviceName = "";
     lastTimeTicks = 0u;
@@ -90,6 +96,11 @@ AtcaIop::AtcaIop() :
     uint32 k;
     for (k=0u; k<ATCA_IOP_N_ADCs; k++) {
         adcValues[k] = 0u;
+        electricalOffsets[k] = 0u;
+        wiringOffsets[k] = 0.0;
+    }
+    for (k=0u; k<ATCA_IOP_N_INTEGRALS; k++) {
+        adcIntegralValues[k] = 0u;
     }
     for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
         adcSimValues[k] = NULL_PTR(int32 *);
@@ -213,9 +224,26 @@ bool AtcaIop::Initialise(StructuredDataI& data) {
         ok = data.Read("SignalsGains", readVector);
     }
 
+    arrayDescription = data.GetType("ElectricalOffsets");
+    numberOfElements = 0u;
+    if (ok) {
+        ok = arrayDescription.GetDataPointer() != NULL_PTR(void *);
+    }
+    if (ok) {
+        numberOfElements = arrayDescription.GetNumberOfElements(0u);
+        ok = (numberOfElements == ATCA_IOP_N_ADCs);
+        if (!ok) {
+            REPORT_ERROR(ErrorManagement::ParametersError, "Exactly %d elements shall be defined in the array ElectricalOffsets", ATCA_IOP_N_ADCs);
+        }
+    }
+
     chopperPeriod = 1000;
     if (!data.Read("ChopperPeriod", chopperPeriod)) {
         REPORT_ERROR(ErrorManagement::Warning, "ChopperPeriod not specified. Using default: %d", chopperPeriod);
+    }
+
+    if (!data.Read("IsMaster", isMaster)) {
+        REPORT_ERROR(ErrorManagement::Warning, "IsMaster not specified. Using default: %d", isMaster);
     }
 
     adcFrequency = 2e5;
@@ -254,16 +282,18 @@ bool AtcaIop::Initialise(StructuredDataI& data) {
 
 bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
     bool ok = DataSourceI::SetConfiguredDatabase(data);
-    //The DataSource shall have 6 signals. The first two are uint32 (counter and time) and other 4 represent an ADC value as int32
+    //The DataSource shall have N signals. 
+    //The first two are uint32 (counter and time) a
+    //4 represent an ADC value as int32
+    //
     if (ok) {
         ok = (GetNumberOfSignals() == ATCA_IOP_N_SIGNALS);
-        //ok = (GetNumberOfSignals() == ADC_SIMULATOR_N_SIGNALS);
     }
     if (!ok) {
         REPORT_ERROR(ErrorManagement::ParametersError, "Exactly %d signals shall be configured", ATCA_IOP_N_SIGNALS);
     }
     uint32 i;
-    for (i=0; (i<ADC_SIMULATOR_N_SIGNALS) && (ok); i++) {
+    for (i=0; (i < ADC_SIMULATOR_N_SIGNALS) && (ok); i++) {
         ok = (GetSignalType(i).numberOfBits == 32u);
         if (!ok) {
             REPORT_ERROR(ErrorManagement::ParametersError, "The signal in position %d shall have 32 bits and %d were specified", i, uint16(GetSignalType(i).numberOfBits));
@@ -275,7 +305,13 @@ bool AtcaIop::SetConfiguredDatabase(StructuredDataI& data) {
             REPORT_ERROR(ErrorManagement::ParametersError, "The signal %d shall be of type UnsignedInteger", i);
         }
     }
-    for (i=2; (i<6) && (ok); i++) {
+    for (i=2; (i < 2 + ADC_SIMULATOR_N_ADCs) && (ok); i++) {
+        ok = (GetSignalType(i).type == SignedInteger);
+        if (!ok) {
+            REPORT_ERROR(ErrorManagement::ParametersError, "The signal %d shall be of type SignedInteger", i);
+        }
+    }
+    for (i=2+ADC_SIMULATOR_N_ADCs; (i < 4 + ADC_SIMULATOR_N_ADCs) && (ok); i++) {
         ok = (GetSignalType(i).type == SignedInteger);
         if (!ok) {
             REPORT_ERROR(ErrorManagement::ParametersError, "The signal %d shall be of type SignedInteger", i);
@@ -493,8 +529,11 @@ bool AtcaIop::GetSignalMemoryBuffer(const uint32 signalIdx, const uint32 bufferI
     else if (signalIdx < ADC_SIMULATOR_N_SIGNALS) {
         signalAddress = adcSimValues[signalIdx - 2u];
     }
-    else if (signalIdx < ATCA_IOP_N_SIGNALS) {
+    else if (signalIdx < ATCA_IOP_N_SIGNALS - ATCA_IOP_N_INTEGRALS) {
         signalAddress = &adcValues[signalIdx - 6u];
+    }
+    else if (signalIdx < ATCA_IOP_N_SIGNALS) {
+        signalAddress = &adcIntegralValues[signalIdx - 14u];
     }
     else {
         ok = false;
@@ -586,8 +625,12 @@ ErrorManagement::ErrorType AtcaIop::Execute(ExecutionInfo& info) {
     uint32 k;
     uint32 s;
     for (k=0u; k<ATCA_IOP_N_ADCs ; k++) {
-        adcValues[k] = (mappedDmaBase[oldestBufferIdx * RT_PCKT_SIZE + 1
+        adcValues[k] = (mappedDmaBase[oldestBufferIdx * RT_PCKT_SIZE + IOP_ADC_OFFSET
             + k] ) / (1<<14);
+    }
+    int64 * mappedDmaBase64 = (int64 *) mappedDmaBase;
+    for (k=0u; k<ATCA_IOP_N_INTEGRALS ; k++) {
+        adcIntegralValues[k] = mappedDmaBase64[oldestBufferIdx * RT_PCKT64_SIZE + IOP_ADC_INTEG_OFFSET + k];
     }
     
     float64 t = counterAndTimer[1];

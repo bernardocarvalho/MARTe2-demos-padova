@@ -1,8 +1,12 @@
 /**
  * @file AtcaIop.h
  * @brief Header file for class AtcaIop
- * @date 19/09/2020
- * @author Andre Neto
+ * @date 19/10/2023
+ * @author Andre Neto / Bernardo Carvalho
+ *
+ * Based on Example:
+ * https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-demos-padova/-/tree/master/DataSources/ADCSimulator
+ *
  *
  * @copyright Copyright 2015 F4E | European Joint Undertaking for ITER and
  * the Development of Fusion Energy ('Fusion for Energy').
@@ -23,8 +27,6 @@
 
 #ifndef ATCA_IOP_H
 #define ATCA_IOP_H
-
-//#define DMA_BUFFS 8
 
 /*---------------------------------------------------------------------------*/
 /*                        Standard header includes                           */
@@ -82,6 +84,19 @@ namespace MARTe {
      *             Type = uint32
      *         }
      *         ADC3 = {
+     *             Type = uint32
+     *         }
+     *         ADC0Decim = {
+     *             Type = uint32
+     *         }
+     *         ADC1Decim = {
+     *             Type = uint32
+     *         }
+     *         ADC2Decim = {
+     *             Type = uint32
+     *         }
+     *         ...
+     *         ADC7Decim = {
      *             Type = uint32
      *         }
      *     }
@@ -160,7 +175,7 @@ namespace MARTe {
             /**
              * @brief Initialises the AtcaIop
              * @param[in] data configuration in the form:
-             * +ADCSim = {
+             * +AtcaIop = {
              *     Class = AtcaIop
              *     Signals = {
              *         Counter = {
@@ -168,7 +183,7 @@ namespace MARTe {
              *         }
              *         Time = {
              *             Type = uint32 //int32 also supported
-             *             Frequency = 1000
+             *             Frequency = 10000
              *         }
              *         ADC0 = {
              *             Type = uint32
@@ -273,6 +288,11 @@ namespace MARTe {
             int32 adcValues[16];
 
             /**
+             * ADC Integral values
+             */
+            int64 adcIntegralValues[16];
+
+            /**
              * Number of samples to read on each cycle
              */
             uint32 adcSamplesPerCycle;
@@ -328,6 +348,16 @@ namespace MARTe {
             float32 signalsGains[4];
 
             /**
+             * The Electrical Offset Parameters.
+             */
+            int32 electricalOffsets[16];
+
+            /**
+             * The Wiring Offset Parameters.
+             */
+            float32 wiringOffsets[16];
+
+            /**
              * The ADC chopping period in samples
              */
             uint16 chopperPeriod;
@@ -342,6 +372,13 @@ namespace MARTe {
              */
             float64 adcPeriod;
 
+            /**
+             * For the ATCA Master board
+             */
+            uint32 isMaster;
+            /**
+             * Pointer to mapped memory
+             */
             int32 * mappedDmaBase;
             uint32   mappedDmaSize;
             /**
