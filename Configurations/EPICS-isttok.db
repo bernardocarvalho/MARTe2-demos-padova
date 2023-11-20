@@ -1,0 +1,64 @@
+record( longin, "ISTTOK:marte2:STATUS")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( longin, "ISTTOK:marte2:COMMAND")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( longin, "ISTTOK:marte2:RESET")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "ISTTOK:marte2:MEASUREMENT0")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( waveform, "ISTTOK:marte2:HIST-IDLE-CT")
+{
+   field(DTYP, "Soft Channel")
+   field(NELM, 10)
+   field(FTVL, "LONG")
+}
+
+record( waveform, "ISTTOK:marte2:HIST-RUN-CT")
+{
+   field(DTYP, "Soft Channel")
+   field(NELM, 10)
+   field(FTVL, "LONG")
+}
+
+record( longin, "ISTTOK:marte2:TIME")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( longin, "ISTTOK:marte2:COUNTER")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "ISTTOK:marte2:ADC0S")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "ISTTOK:marte2:ADC1S")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "ISTTOK:marte2:ADC2S")
+{
+   field(DTYP, "Soft Channel")
+}
+
+record( ai, "ISTTOK:marte2:ADC3S")
+{
+   field(DTYP, "Soft Channel")
+}
+
