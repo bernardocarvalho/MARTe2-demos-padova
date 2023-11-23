@@ -20,27 +20,28 @@ try:
 except:
     print(f'Failed opening {mdsTreeName} for pulse number {mdsPulseNumber:d}')
     exit()
-"""
-Available Channels
-
-ATCAIOP1.ADC0RAW
-ATCAIOP1.ADC1RAW
-ATCAIOP1.ADC2RAW
-ATCAIOP1.ADC3RAW
-ATCAIOP1.ADC4RAW
-ATCAIOP1.ADC5RAW
-ATCAIOP1.ADC6RAW
-ATCAIOP1.ADC7RAW
-
-ATCAIOP1.ADC0INT
-ATCAIOP1.ADC1INT
-
-"""
 
 if __name__ == '__main__':
     mdsNode = tree.getNode("ATCAIOP1.ADC0RAW")
     dataAdc = mdsNode.getData().data()
     timeData = mdsNode.getDimensionAt(0).data()
+    plt.figure()
+    plt.grid()
+    plt.ylabel("ADC counts")
+    plt.xlabel("Sample")
+    plt.subplot(2, 1, 1)
+    plt.plot(timeData, dataAdc, label=f"M{1} CHA")
+    mdsNode = tree.getNode("ATCAIOP1.ADC1RAW")
+    dataAdc = mdsNode.getData().data()
+    plt.plot(timeData, dataAdc, label=f"M{1} CHB")
+    plt.legend()
+    # Bootom plot
+    plt.subplot(2, 1, 2)
+    mdsNode = tree.getNode("ATCAIOP1.ADC1INT")
+    dataIntegAdc = mdsNode.getData().data()
+    timeData = mdsNode.getDimensionAt(0).data()
+    plt.plot(timeData, dataIntegAdc, label=f"M{1} CHB")
+    plt.show()
 
 
 
