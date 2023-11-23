@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Extract data from binary files and save in MATLAB format
+Extract data from csv files
 """
 import sys
 import numpy as np
@@ -25,31 +25,21 @@ if __name__ == '__main__':
     #for i in range(ADC_CHANNELS):
     #    print(f"Ch {i}: {data_m[i]:d}")
     plt.figure()
-    plt.subplot(2, 1, 1)
    # plt.plot(data[0,:MAX_SAMPLES],label=f"M{1} CHA")
     #plt.plot(data[1,0:MAX_SAMPLES],label="M"+str(1)+" CHA")
     #plt.plot(data[2,0:MAX_SAMPLES],label="M"+str(2)+" CHA")
     #plt.plot(data[3,0:MAX_SAMPLES],label="M"+str(3)+" CHA")
-    adcDec = data['ADC0Dec (int32)[1]']
-    vals = adcDec[:MAX_SAMPLES]
+    adc3Dec = data['ADC3Dec (int32)[1]']
+    vals = adc3Dec[:MAX_SAMPLES]
+    #x = DECIM_RATE * np.arange(vals.shape[0])
     x = DECIM_RATE * np.arange(len(vals))
-
-    #plt.plot(x,vals,label=f"M{1} ChA" )
-    adcDec = data['ADC1Dec (int32)[1]']
-    vals = adcDec[:MAX_SAMPLES]
-    #plt.plot(x,vals,label=f"M{1} ChB" )
-    adcDec = data['ADC2Dec (int32)[1]']
-    vals = adcDec[:MAX_SAMPLES]
-    plt.plot(x,vals,label=f"M{2} ChA" )
-    adcDec = data['ADC3Dec (int32)[1]']
-    vals = adcDec[:MAX_SAMPLES]
     plt.plot(x,vals,label=f"M{2} ChB" )
-    #adc4Dec = data['ADC4Dec (int32)[1]']
-    #vals = adc4Dec[:MAX_SAMPLES]
-    #plt.plot(x,vals,label=f"M{3} ChA" )
-    #adc5Dec = data['ADC5Dec (int32)[1]']
-    #vals = adc5Dec[:MAX_SAMPLES]
-    #plt.plot(x,vals,label=f"M{3} ChB" )
+    adc4Dec = data['ADC4Dec (int32)[1]']
+    vals = adc4Dec[:MAX_SAMPLES]
+    plt.plot(x,vals,label=f"M{3} ChA" )
+    adc5Dec = data['ADC5Dec (int32)[1]']
+    vals = adc5Dec[:MAX_SAMPLES]
+    plt.plot(x,vals,label=f"M{3} ChB" )
     #x = DECIM_RATE * np.arange(data.shape[1])
     #for i in range(1,3):
     #    plt.plot(data[i*2,  :MAX_SAMPLES],label=f"M{i} ChA")
@@ -61,24 +51,9 @@ if __name__ == '__main__':
     #plt.plot(counts[::decim]*0.5/1000,chopper[::decim]*np.max(signal),"k",label="Phase")
     plt.legend()
     plt.grid()
-    plt.ylabel("LSB")
+    plt.ylabel("ADC counts")
     plt.xlabel("Sample")
-    #
-    plt.subplot(2, 1, 2)
-    adcInteg = data['ADC1Int (int64)[1]']
-    vals = adcInteg[:MAX_SAMPLES]
-    #plt.plot(x,vals,label=f"M{1} IntB" )
-    adcInteg = data['ADC2Int (int64)[1]']
-    vals = adcInteg[:MAX_SAMPLES]
-    plt.plot(x,vals,label=f"M{2} IntA" )
-    adcInteg = data['ADC3Int (int64)[1]']
-    vals = adcInteg[:MAX_SAMPLES]
-    plt.plot(x,vals,label=f"M{2} IntB" )
-    plt.ylabel("LSB * Sample")
-    plt.xlabel("Sample")
-    plt.legend()
-    plt.grid()
-
     plt.show()
+
 
 # vim: sta:et:sw=4:ts=4:sts=4
