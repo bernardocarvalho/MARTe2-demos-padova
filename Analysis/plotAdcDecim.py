@@ -12,7 +12,7 @@ from pandas import read_csv
 if len(sys.argv) > 1:
     filename = str(sys.argv[1])
 else:
-    filename = 'RTApp-AtcaIop.csv'
+    filename = '/tmp/AtcaIop.csv'
 
 MAX_SAMPLES = 1000
 ADC_CHANNELS = 4
@@ -29,15 +29,15 @@ if __name__ == '__main__':
     #plt.plot(data[1,0:MAX_SAMPLES],label="M"+str(1)+" CHA")
     #plt.plot(data[2,0:MAX_SAMPLES],label="M"+str(2)+" CHA")
     #plt.plot(data[3,0:MAX_SAMPLES],label="M"+str(3)+" CHA")
-    adc3Dec = data['ADC3Dec (int32)[1]']
+    adc3Dec = data['AdcRawDecim3 (float32)[1]']
     vals = adc3Dec[:MAX_SAMPLES]
     #x = DECIM_RATE * np.arange(vals.shape[0])
     x = DECIM_RATE * np.arange(len(vals))
     plt.plot(x,vals,label=f"M{2} ChB" )
-    adc4Dec = data['ADC4Dec (int32)[1]']
+    adc4Dec = data['AdcRawDecim4 (float32)[1]']
     vals = adc4Dec[:MAX_SAMPLES]
     plt.plot(x,vals,label=f"M{3} ChA" )
-    adc5Dec = data['ADC5Dec (int32)[1]']
+    adc5Dec = data['AdcRawDecim5 (float32)[1]']
     vals = adc5Dec[:MAX_SAMPLES]
     plt.plot(x,vals,label=f"M{3} ChB" )
     #x = DECIM_RATE * np.arange(data.shape[1])
