@@ -4,7 +4,7 @@ Repository containing all the demos for MARTe2 Training Session
 
 ## Setting up environment
 
-It is assumed that a clean CentOS 7 installation is being used (https://www.centos.org/download/).
+It is assumed that a clean CentOS/AlmaLinux 9 installation is being used (https://almalinux.org/get-almalinux).
 
 Alternatively, there is also a Dockerfile available (see below).
 
@@ -12,33 +12,33 @@ Alternatively, there is also a Dockerfile available (see below).
 
 Open a terminal, install epel repository and update the distribution:
 
- `yum -y install epel-release`
+ `dnf -y install epel-release`
 
- `yum -y update`
+ `dnf -y update`
 
 Install git:
 
- `yum -y install git`
+ `dnf -y install git`
 
 Install all the standard development tools, the cmake3 compiler and octave:
 
- `yum -y groups install "Development Tools"`
+ `dnf -y groups install "Development Tools"`
 
- `yum -y install wget cmake3 octave libxml2 libxml2-devel bc`
+ `dnf -y install wget cmake3 octave libxml2 libxml2-devel bc`
 
 Solve dependencies for MARTe2 and EPICS:
 
- `yum -y install ncurses-devel readline-devel`
+ `dnf -y install ncurses-devel readline-devel`
 
 Install Python and Perl Parse utilities for open62541:
 
- `yum -y install python-dateutil python-six perl-ExtUtils-ParseXS`
+ `dnf -y install python-dateutil python-six perl-ExtUtils-ParseXS`
 
 Install MDSplus
 
- `yum -y install http://www.mdsplus.org/dist/el7/stable/RPMS/noarch/mdsplus-repo-7.50-0.el7.noarch.rpm`
+ `dnf install http://www.mdsplus.org/dist/rhel9/alpha/RPMS/noarch/mdsplus-alpha-repo-7.139-58.el9.noarch.rpm`
 
- `yum -y install mdsplus-kernel* mdsplus-java* mdsplus-python* mdsplus-devel*`
+ `dnf -y install mdsplus-kernel* mdsplus-java* mdsplus-python* mdsplus-devel*`
 
 Create a folder named Projects and clone MARTe2 Core,  MARTe2 components and the MARTe2 demos:
 
@@ -47,47 +47,21 @@ Create a folder named Projects and clone MARTe2 Core,  MARTe2 components and the
  `cd ~/Projects`
 
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2.git MARTe2-dev`
-
- `git clone -b \#351_OPCUA https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
  
- `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-demos-padova.git`
+ `git clone https://github.com/bernardocarvalho/MARTe2-demos-padova`
+ `git checkout isttok-marte`
 
-Download EPICS R70.2:
+Download EPICS R7:
 
- `git clone -b R7.0.2 --recursive https://github.com/epics-base/epics-base.git epics-base-7.0.2`
-
-Clone open62541 v0.3 library:
-
- `git clone -b 0.3 https://github.com/open62541/open62541.git`
-
-Download SDN:
-
- `wget https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-demos-padova/raw/develop/Other/SDN_1.0.12_nonCCS.tar.gz`
-
- `tar zxvf SDN_1.0.12_nonCCS.tar.gz`
+ `git clone --recursive https://github.com/epics-base/epics-base.git`
 
 ### Building libraries and frameworks
-Start building the open62541 library:
-
- `mkdir ~/Projects/open62541/build`
-
- `cd ~/Projects/open62541/build`
-
- `cmake3 ..`
-
- `make`
 
 Compile EPICS:
 
- `cd ~/Projects/epics-base-7.0.2`
+ `cd ~/Projects/epics-base`
 
  `echo "OP_SYS_CXXFLAGS += -std=c++11" >> configure/os/CONFIG_SITE.linux-x86_64.Common`
-
- `make`
-
-Compile SDN: 
-
- `cd ~/Projects/SDN_1.0.12_nonCCS`
 
  `make`
 
@@ -113,23 +87,15 @@ Make sure that all the environment variables are correctly exported.
 
  `export MARTe2_Components_DIR=~/Projects/MARTe2-components`
 
- `export OPEN62541_LIB=~/Projects/open62541/build/bin`
+ `export EPICS_BASE=~/Projects/epics-base`
 
- `export OPEN62541_INCLUDE=~/Projects/open62541/build`
-
- `export EPICS_BASE=~/Projects/epics-base-7.0.2`
-
- `export EPICSPVA=~/Projects/epics-base-7.0.2`
+ `export EPICSPVA=~/Projects/epics-base`
 
  `export EPICS_HOST_ARCH=linux-x86_64`
 
  `export PATH=$PATH:$EPICS_BASE/bin/$EPICS_HOST_ARCH`
 
- `export SDN_CORE_INCLUDE_DIR=~/Projects/SDN_1.0.12_nonCCS/src/main/c++/include/`
-
- `export SDN_CORE_LIBRARY_DIR=~/Projects/SDN_1.0.12_nonCCS/target/lib/`
-
- `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MARTe2_DIR/Build/x86-linux/Core/:$EPICS_BASE/lib/$EPICS_HOST_ARCH:$SDN_CORE_LIBRARY_DIR`
+ `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MARTe2_DIR/Build/x86-linux/Core/:$EPICS_BASE/lib/$EPICS_HOST_ARCH`
  
  `cd ~/Projects/MARTe2-dev`
 
