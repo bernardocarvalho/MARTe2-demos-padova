@@ -47,8 +47,11 @@ Create a folder named Projects and clone MARTe2 Core,  MARTe2 components and the
  `cd ~/Projects`
 
  `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2.git MARTe2-dev`
+
+ `git clone https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2-components.git`
  
- `git clone https://github.com/bernardocarvalho/MARTe2-demos-padova`  
+ `git clone https://github.com/bernardocarvalho/MARTe2-demos-padova`
+ 
  `git checkout isttok-marte`
 
 Download EPICS R7:
