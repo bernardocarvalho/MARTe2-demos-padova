@@ -139,18 +139,56 @@ Open a new terminal shell and launch the MARTe2 application
 
  `./Main.sh -l RealTimeLoader -f ../Configurations/RTApp-HTTP-2.cfg -m StateMachine:START`
 
+ Would should see a bunch of logger messaged. Last one should be:
+
+´´´
+[Warning - Threads.cpp:173]: Requested a thread priority that is higher than the one supported by the selected policy - clipping to the maximum value supported by the policy.
+[Warning - Threads.cpp:173]: Requested a thread priority that is higher than the one supported by the selected policy - clipping to the maximum value supported by the policy.
+[Warning - Threads.cpp:185]: Failed to change the thread priority (likely due to insufficient permissions)
+[Information - StateMachine.cpp:340]: In state (INITIAL) triggered message (StartNextStateExecutionMsg)
+
+´´´
+
+A second configuration file can also be used: ../Configurations/RTApp-ADCSimul.cfg
+ 
 ### Start open browser to check MARTe2 App Objects
 
 [MARTe2 App ](http://efda-marte.ipfn.tecnico.ulisboa.pt:8084)
 
 
-### Change RT App State to RUN and back to IDLE
+### Change RT App State to RUN to store Data and get back to IDLE
 
 Open a new terminal shell and
 
 `caput MARTE2-DEMO-APP:COMMAND 0`
 
 `caput MARTE2-DEMO-APP:COMMAND 1`
+
+### Look at the generated data, taken in **RUN* State
+
+`less /tmp/RTApp-EPICSv3-1.csv`
+
+`less /tmp/RTApp-EPICSv3-1-performance.csv`
+
+### Monitoring the PVs
+ 
+The following EPICS PVs can be monitored:
+
+```
+MARTE2-DEMO-APP:HIST-IDLE-CT
+MARTE2-DEMO-APP:HIST-RUN-CT
+MARTE2-DEMO-APP:STATUS
+MARTE2-DEMO-APP:RESET
+MARTE2-DEMO-APP:TIME
+MARTE2-DEMO-APP:COUNTER
+MARTE2-DEMO-APP:ADC0S
+MARTE2-DEMO-APP:ADC1S
+MARTE2-DEMO-APP:ADC2S
+MARTE2-DEMO-APP:ADC3S
+```
+For example for the Histogram on cycle times.
+
+`camonitor MARTE2-DEMO-APP:HIST-IDLE-CT`
 
 
 
