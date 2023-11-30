@@ -119,4 +119,38 @@ Disable firewall rules (otherwise the communication with EPICS may not work):
 Export all variables permanently (assumes that the relative paths above were used!).
  `cp marte2-exports.sh /etc/profile.d/`
 
+## Testing the RT App 
+
+### Start the EPICS IOC
+
+Open a new terminal shell and start the [EPICS](https://epics-controls.org) IOC:
+
+ `ssh marte2user@efda-marte.ipfn.tecnico.ulisboa.pt`
+
+ `cd ~/Projects/MARTe2-demos-padova/Configurations`
+
+ `softIoc -d EPICSv3-demo.db`
+
+### Start MARTe2 
+
+Open a new terminal shell and launch the MARTe2 application
+
+ `cd ~/Projects/MARTe2-demos-padova/Startup`
+
+ `./Main.sh -l RealTimeLoader -f ../Configurations/RTApp-HTTP-2.cfg -m StateMachine:START`
+
+### Start open browser to check MARTe2 App Objects
+
+[MARTe2 App ](http://efda-marte.ipfn.tecnico.ulisboa.pt:8084)
+
+
+### Change RT App State to RUN and back to IDLE
+
+Open a new terminal shell and
+
+`caput MARTE2-DEMO-APP:COMMAND 0`
+
+`caput MARTE2-DEMO-APP:COMMAND 1`
+
+
 
