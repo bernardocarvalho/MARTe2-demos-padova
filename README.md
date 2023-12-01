@@ -74,7 +74,7 @@ In the root folder of this project there is a Dockerfile which includes all the 
 
  `cd ~/Projects/MARTe2-demos-padova`
 
- `docker build .`
+ `docker build -t isttok-marte .`
 
 Note that you need to map your local Projects directory with the /root/Projects directory in the container.
 
@@ -82,7 +82,14 @@ To execute the image with your host folder mapped into the container, run:
 
  `docker run -it -e DISPLAY=$DISPLAY -w /root/Projects -v ~/Projects:/root/Projects:Z -v /tmp/.X11-unix:/tmp/.X11-unix DOCKER_IMAGE_ID`
 
-## Compilings the MARTe and the examples
+ If running on a MAC, first install an run [XQuartz](https://www.xquartz.org), and run:
+
+ `export IP=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')`
+
+ `xhost +$IP`   
+ `docker run -it -e DISPLAY=$IP:0 -w /root/Projects -v ~/Projects:/root/Projects:Z -e XAUTHORITY=/.Xauthority -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/.Xauthority:/.Xauthority isttok-marte`
+
+## Compiling MARTe, EPICS, and the examples
 
 Make sure that all the environment variables are correctly exported.
 
@@ -96,10 +103,12 @@ Make sure that all the environment variables are correctly exported.
 
  `export EPICS_HOST_ARCH=linux-x86_64`
 
- `export PATH=$PATH:$EPICS_BASE/bin/$EPICS_HOST_ARCH`
+ `export MDSPLUS_DIR=/usr/local/mdsplus`
+
+ `export PATH=$MDSPLUS_DIR/bin:$EPICS_BASE/bin/$EPICS_HOST_ARCH:$PATH`
 
  `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MARTe2_DIR/Build/x86-linux/Core/:$EPICS_BASE/lib/$EPICS_HOST_ARCH`
- 
+
  `cd ~/Projects/MARTe2-dev`
 
  `make -f Makefile.linux`
@@ -119,11 +128,11 @@ Disable firewall rules (otherwise the communication with EPICS may not work):
 Export all variables permanently (assumes that the relative paths above were used!).
  `cp marte2-exports.sh /etc/profile.d/`
 
-## Testing the RT App 
+## Testing the RT App
 
 ### Start the EPICS IOC
 
-Open a new terminal shell and start the [EPICS](https://epics-controls.org) IOC:
+Open a new terminal shell and start the [EPICS](https://epics-controls.org) IOC server:
 
  `ssh marte2user@efda-marte.ipfn.tecnico.ulisboa.pt`
 
@@ -139,7 +148,7 @@ Open a new terminal shell and launch the MARTe2 application
 
  `./Main.sh -l RealTimeLoader -f ../Configurations/RTApp-HTTP-2.cfg -m StateMachine:START`
 
- Would should see a bunch of logger messaged. Last one should be:
+ Would should see a bunch of logger messaged. Last list should be:
 
 ´´´
 [Warning - Threads.cpp:173]: Requested a thread priority that is higher than the one supported by the selected policy - clipping to the maximum value supported by the policy.
@@ -151,20 +160,20 @@ Open a new terminal shell and launch the MARTe2 application
 
 A second configuration file can also be used: ../Configurations/RTApp-ADCSimul.cfg
  
-### Start open browser to check MARTe2 App Objects
+### Start open browser and explore MARTe2 App Objects
 
 [MARTe2 App ](http://efda-marte.ipfn.tecnico.ulisboa.pt:8084)
 
 
-### Change RT App State to RUN to store Data and get back to IDLE
+### Change RT App State to RUN  (to store Data), and get back to IDLE
 
-Open a new terminal shell and
+Open a new terminal shell and run:
 
 `caput MARTE2-DEMO-APP:COMMAND 0`
 
 `caput MARTE2-DEMO-APP:COMMAND 1`
 
-### Look at the generated data, taken in **RUN* State
+### Look at the generated data, taken in **RUN** State
 
 `less /tmp/RTApp-EPICSv3-1.csv`
 
@@ -186,7 +195,7 @@ MARTE2-DEMO-APP:ADC1S
 MARTE2-DEMO-APP:ADC2S
 MARTE2-DEMO-APP:ADC3S
 ```
-For example for the Histogram on cycle times.
+For example, see the Histogram of cycle times.
 
 `camonitor MARTE2-DEMO-APP:HIST-IDLE-CT`
 
