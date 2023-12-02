@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Extract data from csv files
+Plot data from csv files using Matplotlib
 """
 import sys
 import numpy as np
