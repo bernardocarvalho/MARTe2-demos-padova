@@ -49,8 +49,8 @@ namespace MARTe {
  * The number of signals (2 time signals + 4 ADCs).
  */
 const uint32 ATCA_IOP_N_TIMCNT = 2u;
-const uint32 ATCA_IOP_N_ADCs = 8u;
-const uint32 ATCA_IOP_N_INTEGRALS = 8u;
+const uint32 ATCA_IOP_N_ADCs = 12u;
+const uint32 ATCA_IOP_N_INTEGRALS = 12u;
 const uint32 ATCA_IOP_MAX_CHANNELS = 32u;
 const uint32 ADC_SIMULATOR_N_ADCs = 2u;
 //const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
