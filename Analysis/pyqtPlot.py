@@ -53,7 +53,7 @@ for i in range(1,3):
 win.nextRow()
 p4 = win.addPlot(title="ATCA Integral Channels")
 p4.addLegend()
-for i in range(5):
+for i in range(8,12):
     adc = dataCsv[f'AdcInteg{i} (float32)[1]']
     y = adc[:MAX_SAMPLES]
     x = DECIM_RATE * np.arange(len(y))
