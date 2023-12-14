@@ -39,6 +39,7 @@ ATCAIOP1.ADC1INT
 
 if __name__ == '__main__':
     mdsNode = tree.getNode("ATCAIOP1.ADC0RAW")
+    mdsNode = tree.getNode("ATCAIOP1.ADC1INT")
     dataAdc = mdsNode.getData().data()
     timeData = mdsNode.getDimensionAt(0).data()
 
