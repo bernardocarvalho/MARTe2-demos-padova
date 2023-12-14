@@ -15,7 +15,7 @@ app = pg.mkQApp("Plotting MARTe2 Data")
 #mw = QtWidgets.QMainWindow()
 #mw.resize(800,800)
 
-MAX_SAMPLES = 1000
+MAX_SAMPLES = 50000
 ADC_CHANNELS = 4
 DECIM_RATE = 200
 
@@ -25,7 +25,6 @@ else:
     mdsPulseNumber = 1
     #treename = ''
 
-
 mdsTreeName = 'rtappisttok'
 
 try:
@@ -34,8 +33,8 @@ except:
     print(f'Failed opening {mdsTreeName} for pulse number {mdsPulseNumber:d}')
     exit()
 
-time = dataCsv['#Time (uint32)[1]']
-timeRel = time - time[0]
+#time = dataCsv['#Time (uint32)[1]']
+#timeRel = time - time[0]
 #x = DECIM_RATE * np.arange(len(vals))
 
 win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting examples")
@@ -51,16 +50,15 @@ mdsNode = tree.getNode("ATCAIOP1.ADC0RAW")
 dataAdc = mdsNode.getData().data()
 timeData = mdsNode.getDimensionAt(0).data()
 p1.addLegend()
-for i in range(1,2):
+for i in range(0,4):
     mdsNode = tree.getNode(f"ATCAIOP1.ADC{i}RAW")
     dataAdc = mdsNode.getData().data()
     timeData = mdsNode.getDimensionAt(0).data()
-    y = dataAdc[:MAX_SAMPLES]
-    x = DECIM_RATE * np.arange(len(y))
+    y = dataAdc[:MAX_SAMPLES, 0]
+    x = DECIM_RATE * np.arange(len(y)) / 2.0e6
     p1.plot(x,y, pen=pg.mkPen(i, width=2), name=f"Ch {i}")
 #p1.setLabel('bottom', "Y Axis", units='s')
 
-"""
 win.nextRow()
 p4 = win.addPlot(title="ATCA Integral Channels")
 p4.addLegend()
@@ -68,13 +66,13 @@ for i in range(8,12):
     mdsNode = tree.getNode(f"ATCAIOP1.ADC{i}INT")
     dataAdc = mdsNode.getData().data()
     timeData = mdsNode.getDimensionAt(0).data()
-    y = dataAdc[:MAX_SAMPLES]
-    x = DECIM_RATE * np.arange(len(y))
+    y = dataAdc[:MAX_SAMPLES, 0]
+    #x = DECIM_RATE * np.arange(len(y))
+    x = DECIM_RATE * np.arange(len(y)) / 2.0e6
     p4.plot(x,y, pen=pg.mkPen(i, width=2), name=f"Ch {i}")
 
-p4.setLabel('bottom', "Y Axis", units='s')
+p4.setLabel('bottom', "Time", units='s')
 
-"""
 #updatePlot()
 
 if __name__ == '__main__':
