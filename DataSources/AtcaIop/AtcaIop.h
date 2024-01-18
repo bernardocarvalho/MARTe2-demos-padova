@@ -48,6 +48,18 @@
 namespace MARTe {
 
     /**
+     * The number of signals (2 time signals + ).
+     */
+    const uint32 ATCA_IOP_MAX_CHANNELS = 32u;
+    
+    const uint32 ATCA_IOP_N_TIMCNT = 2u;
+    const uint32 ATCA_IOP_N_ADCs = 12u;
+    const uint32 ATCA_IOP_N_INTEGRALS = 12u;
+    const uint32 ATCA_IOP_N_DACs = 2u;
+    const uint32 ADC_SIMULATOR_N_ADCs = 2u;
+    const uint32 ATCA_IOP_N_SIGNALS = (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs +
+            ATCA_IOP_N_INTEGRALS  + ATCA_IOP_N_DACs + ADC_SIMULATOR_N_ADCs);
+    /**
      * The number of buffers to synchronise with the DMA
      */
     const uint32 NUMBER_OF_BUFFERS = 8u;
@@ -296,6 +308,10 @@ namespace MARTe {
              * Number of samples to read on each cycle
              */
             uint32 adcSamplesPerCycle;
+            /**
+             * DAC values
+             */
+            int32 dacValues[16];
 
             /**
              * The semaphore for the synchronisation between the EmbeddedThread and the Synchronise method.

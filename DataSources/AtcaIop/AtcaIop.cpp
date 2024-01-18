@@ -37,6 +37,7 @@
 /*---------------------------------------------------------------------------*/
 #include "AdvancedErrorManagement.h"
 #include "MemoryMapSynchronisedInputBroker.h"
+#include "MemoryMapSynchronisedOutputBroker.h"
 #include "AtcaIop.h"
 #include "atca-v6-pcie-ioctl.h"
 
@@ -45,17 +46,6 @@
 /*---------------------------------------------------------------------------*/
 namespace MARTe {
 
-/**
- * The number of signals (2 time signals + 4 ADCs).
- */
-const uint32 ATCA_IOP_N_TIMCNT = 2u;
-const uint32 ATCA_IOP_N_ADCs = 12u;
-const uint32 ATCA_IOP_N_INTEGRALS = 12u;
-const uint32 ATCA_IOP_MAX_CHANNELS = 32u;
-const uint32 ADC_SIMULATOR_N_ADCs = 2u;
-//const uint32 ADC_SIMULATOR_N_SIGNALS = 2 + ADC_SIMULATOR_N_ADCs;
-const uint32 ATCA_IOP_N_SIGNALS = (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs +
-    ATCA_IOP_N_INTEGRALS + ADC_SIMULATOR_N_ADCs);
 const float64 ADC_SIMULATOR_PI = 3.14159265359;
 const uint32 IOP_ADC_OFFSET = 1u; // in DMA Data packet
 const uint32 IOP_ADC_INTEG_OFFSET = 16u;  // in 64 bit words
@@ -86,7 +76,6 @@ struct atca_wo_config {
 /*---------------------------------------------------------------------------*/
 /*                           Method definitions                              */
 /*---------------------------------------------------------------------------*/
-//namespace MARTe {
 AtcaIop::AtcaIop() :
         DataSourceI(), MessageI(), EmbeddedServiceMethodBinderI(), executor(*this) {
     boardId = 2u;
@@ -116,6 +105,9 @@ AtcaIop::AtcaIop() :
     }
     for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
         adcSimValues[k] = NULL_PTR(int32 *);
+    }
+    for (k=0u; k<ATCA_IOP_N_DACs; k++) {
+        dacValues[k] = 0;
     }
 
     if (!synchSem.Create()) {
@@ -597,11 +589,17 @@ bool AtcaIop::GetSignalMemoryBuffer(const uint32 signalIdx, const uint32 bufferI
         signalAddress = &adcValues[signalIdx - ATCA_IOP_N_TIMCNT];
     }
     else if (signalIdx < ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS) {
-        signalAddress = &adcIntegralValues[signalIdx - (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs)];
+        signalAddress = &adcIntegralValues[signalIdx -
+            (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs)];
+    }
+    else if (signalIdx < ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs +
+            ATCA_IOP_N_INTEGRALS + ATCA_IOP_N_DACs) {
+        signalAddress = &dacValues[signalIdx -
+            (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS)];
     }
     else if (signalIdx < ATCA_IOP_N_SIGNALS) {
-    //else if (signalIdx < ADC_SIMULATOR_N_SIGNALS) {
-        signalAddress = adcSimValues[signalIdx - (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS)];
+        signalAddress = adcSimValues[signalIdx - 
+            (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS + ATCA_IOP_N_DACs)];
     }
     else {
         ok = false;
@@ -616,7 +614,6 @@ const char8* AtcaIop::GetBrokerName(StructuredDataI& data, const SignalDirection
         if (!data.Read("Frequency", frequency)) {
             frequency = -1.F;
         }
-
         if (frequency > 0.F) {
             brokerName = "MemoryMapSynchronisedInputBroker";
         }
@@ -624,6 +621,10 @@ const char8* AtcaIop::GetBrokerName(StructuredDataI& data, const SignalDirection
             brokerName = "MemoryMapInputBroker";
         }
     }
+    else if (direction == OutputSignals) {
+        brokerName = "MemoryMapSynchronisedOutputBroker";
+        REPORT_ERROR(ErrorManagement::Information, "DataSource compatible with OutputSignals");
+        }
     else {
         REPORT_ERROR(ErrorManagement::ParametersError, "DataSource not compatible with OutputSignals");
     }
