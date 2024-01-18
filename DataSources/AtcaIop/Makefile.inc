@@ -22,7 +22,7 @@
 #
 #############################################################
 
-OBJSX=AtcaIop.x
+OBJSX=AtcaIopADC.x
 
 PACKAGE=Components/DataSources
 ROOT_DIR=../..
@@ -42,8 +42,8 @@ INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L3Services
 INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L4Messages
 
 all: $(OBJS)    \
-    $(BUILD_DIR)/AtcaIop$(LIBEXT) \
-    $(BUILD_DIR)/AtcaIop$(DLLEXT)
+    $(BUILD_DIR)/AtcaIopADC$(LIBEXT) \
+    $(BUILD_DIR)/AtcaIopADC$(DLLEXT)
 	echo  $(OBJS)
 
 include depends.$(TARGET)
