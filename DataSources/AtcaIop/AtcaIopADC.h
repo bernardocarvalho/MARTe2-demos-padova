@@ -55,9 +55,9 @@ namespace MARTe {
     const uint32 ATCA_IOP_N_TIMCNT = 2u;
     const uint32 ATCA_IOP_N_ADCs = 12u;
     const uint32 ATCA_IOP_N_INTEGRALS = ATCA_IOP_N_ADCs ; //12u;
-    const uint32 ADC_SIMULATOR_N_ADCs = 2u;
+    //const uint32 ADC_SIMULATOR_N_ADCs = 2u;
     const uint32 ATCA_IOP_N_SIGNALS = (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs +
-            ATCA_IOP_N_INTEGRALS + ADC_SIMULATOR_N_ADCs);
+            ATCA_IOP_N_INTEGRALS);
     /**
      * The number of buffers to synchronise with the DMA
      */
@@ -293,24 +293,14 @@ namespace MARTe {
             uint32 counterAndTimer[2];
 
             /**
-             * ADC Decimated values
-             */
-            int32 *adcDecimatedValues;
-
-            /**
-             * ADC Simul values
-             */
-            int32 *adcSimValues[4];
-
-            /**
              * ADC values
              */
-            int32 adcValues[16];
+            int32 adcValues[ATCA_IOP_MAX_CHANNELS];
 
             /**
              * ADC Integral values
              */
-            int64 adcIntegralValues[16];
+            int64 adcIntegralValues[ATCA_IOP_MAX_CHANNELS];
 
             /**
              * Number of samples to read on each cycle
@@ -369,12 +359,12 @@ namespace MARTe {
             /**
              * The Electrical Offset Parameters.
              */
-            int32 electricalOffsets[16];
+            int32 electricalOffsets[ATCA_IOP_MAX_CHANNELS];
 
             /**
              * The Wiring Offset Parameters.
              */
-            float32 wiringOffsets[16];
+            float32 wiringOffsets[ATCA_IOP_MAX_CHANNELS];
 
             /**
              * The ADC chopping period in samples

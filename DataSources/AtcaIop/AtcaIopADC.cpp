@@ -37,7 +37,6 @@
 /*---------------------------------------------------------------------------*/
 #include "AdvancedErrorManagement.h"
 #include "MemoryMapSynchronisedInputBroker.h"
-//#include "MemoryMapSynchronisedOutputBroker.h"
 #include "AtcaIopADC.h"
 #include "atca-v6-pcie-ioctl.h"
 
@@ -103,11 +102,6 @@ AtcaIopADC::AtcaIopADC() :
     for (k=0u; k<ATCA_IOP_N_INTEGRALS; k++) {
         adcIntegralValues[k] = 0u;
     }
-    for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
-        adcSimValues[k] = NULL_PTR(int32 *);
-    }
-
-    adcDecimatedValues = NULL_PTR(int32 *);
 
     if (!synchSem.Create()) {
         REPORT_ERROR(ErrorManagement::FatalError, "Could not create EventSem.");
@@ -145,15 +139,6 @@ AtcaIopADC::~AtcaIopADC() {
         REPORT_ERROR(ErrorManagement::Information, "Close device %d OK", boardDmaDescriptor);
     }
     uint32 k;
-    if (adcDecimatedValues != NULL_PTR(int32 *)) {
-        delete [] adcDecimatedValues;
-    }
-
-    for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
-        if (adcSimValues[k] != NULL_PTR(int32 *)) {
-            delete [] adcSimValues[k];
-        }
-    }
 }
 
 bool AtcaIopADC::AllocateMemory() {
@@ -470,15 +455,14 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
             }
             bool isCounter = false;
             bool isTime = false;
-            bool isAdcInt = false;
-            bool isAdcDecim = false;
-            bool isAdcSim = false;
+            bool isAdc = false;
+//            bool isAdcDecim = false;
+            //bool isAdcSim = false;
             uint32 signalIdx = 0u;
             uint32 nSamples = 0u;
             uint32 nElements = 0u;
 
             ok = GetFunctionSignalSamples(InputSignals, functionIdx, i, nSamples);
-
 
             //Is the counter or the time signal?
             StreamString signalAlias;
@@ -491,9 +475,9 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
             if (ok) {
                 isCounter = (signalIdx == 0u);
                 isTime = (signalIdx == 1u);
-                isAdcDecim = (signalIdx == 2u);
-                isAdcInt = (signalIdx < ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS);
-                isAdcSim = (signalIdx < ATCA_IOP_N_SIGNALS);
+                //isAdcDecim = (signalIdx == 2u);
+                isAdc= (signalIdx < ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS);
+                //isAdcSim = (signalIdx < ATCA_IOP_N_SIGNALS);
                 if (isCounter) {
                     if (nSamples > 1u) {
                         ok = false;
@@ -506,6 +490,7 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
                         REPORT_ERROR(ErrorManagement::ParametersError, "The second signal (time) shall have one and only one sample");
                     }
                 }
+                /*
                 else if (isAdcDecim) {
                     ok = GetSignalNumberOfElements(signalIdx, nElements);
                     REPORT_ERROR(ErrorManagement::Information, "The ADC decim Signal Elements %d", nElements);
@@ -514,12 +499,14 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
                     //    REPORT_ERROR(ErrorManagement::ParametersError, "The second signal (time) shall have one and only one sample");
                     //}
                 }
-                else if (isAdcInt) {
+                */
+                else if (isAdc) {
                     if (nSamples > 1u) {
                         ok = false;
                         REPORT_ERROR(ErrorManagement::ParametersError, "The ATCA-IOP signals shall have one and only one sample");
                     }
                 }
+                /*
                 else if (isAdcSim) {
                     //How many samples to read for each cycle?
                     if (adcSamplesPerCycle == 0u) {
@@ -533,7 +520,8 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
                     }
 
                 }
-                // else {}
+                */
+                else {}
             }
         }
     }
@@ -554,7 +542,8 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
                 "The timer will be set using a sleepTimeTicks of %d (ns)", sleepTimeTicks);
     }
     if (ok) {
-        float32 totalNumberOfSamplesPerSecond = (static_cast<float32>(adcSamplesPerCycle) * cycleFrequency);
+        //float32 totalNumberOfSamplesPerSecond = (static_cast<float32>(adcSamplesPerCycle) * cycleFrequency);
+        float32 totalNumberOfSamplesPerSecond = (static_cast<float32>(rtDecimation) * cycleFrequency);
         ok = (adcFrequency == static_cast<uint32>(totalNumberOfSamplesPerSecond));
         if (!ok) {
             REPORT_ERROR(ErrorManagement::ParametersError,
@@ -562,16 +551,6 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
                 totalNumberOfSamplesPerSecond, adcFrequency);
         }
     }
-    if (ok) {
-        adcDecimatedValues = new int32[numberOfChannels];
-    }
-    if (ok) {
-        uint32 k;
-        for (k=0u; k<ADC_SIMULATOR_N_ADCs; k++) {
-            adcSimValues[k] = new int32[adcSamplesPerCycle];
-        }
-    }
-
     return ok;
 }
 
@@ -594,10 +573,6 @@ bool AtcaIopADC::GetSignalMemoryBuffer(const uint32 signalIdx, const uint32 buff
     else if (signalIdx < ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS) {
         signalAddress = &adcIntegralValues[signalIdx -
             (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs)];
-    }
-    else if (signalIdx < ATCA_IOP_N_SIGNALS) {
-        signalAddress = adcSimValues[signalIdx - 
-            (ATCA_IOP_N_TIMCNT + ATCA_IOP_N_ADCs + ATCA_IOP_N_INTEGRALS )];
     }
     else {
         ok = false;
@@ -702,10 +677,6 @@ ErrorManagement::ErrorType AtcaIopADC::Execute(ExecutionInfo& info) {
     t /= 1e6;
     // Compute simulated Sinus Signals
     for (s=0u; s<adcSamplesPerCycle; s++) {
-        for (k=0u; k<ADC_SIMULATOR_N_ADCs -2 ; k++) {
-            float32 value =  sin(2 * ADC_SIMULATOR_PI  * t);
-            adcSimValues[k][s] = static_cast<uint32>(value);
-        }
         t += adcPeriod;
     }
     return err;
