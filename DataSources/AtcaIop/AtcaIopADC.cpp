@@ -21,12 +21,12 @@
  * methods, such as those inline could be defined on the header file, instead.
  */
 
-#define DLL_API
+//#define DLL_API
 
 /*---------------------------------------------------------------------------*/
 /*                         Standard header includes                          */
 /*---------------------------------------------------------------------------*/
-#include <math.h>
+//#include <math.h>
 #include <fcntl.h>
 #include <sys/mman.h>  // For mmap()
 
@@ -45,7 +45,7 @@
 /*---------------------------------------------------------------------------*/
 namespace MARTe {
 
-const float64 ADC_SIMULATOR_PI = 3.14159265359;
+//const float64 ADC_SIMULATOR_PI = 3.14159265359;
 const uint32 IOP_ADC_OFFSET = 1u; // in DMA Data packet
 const uint32 IOP_ADC_INTEG_OFFSET = 16u;  // in 64 bit words
 
@@ -77,14 +77,15 @@ struct atca_wo_config {
 /*---------------------------------------------------------------------------*/
 AtcaIopADC::AtcaIopADC() :
         DataSourceI(), MessageI(), EmbeddedServiceMethodBinderI(), executor(*this) {
-    boardId = 2u;
+    //boardId = 2u;
+    deviceName = "";
+    deviceDmaName = "";
     boardFileDescriptor = -1;
     boardDmaDescriptor = -1;
     mappedDmaBase = NULL;
     mappedDmaSize = 0u;
     isMaster = 0u;
     oldestBufferIdx = 0u;
-    deviceName = "";
     lastTimeTicks = 0u;
     sleepTimeTicks = 0u;
     timerPeriodUsecTime = 0u;
@@ -117,7 +118,6 @@ AtcaIopADC::~AtcaIopADC() {
         ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_STREAM_DISABLE);
         ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_DISABLE);
         uint32 statusReg = 0;
-        //REPORT_ERROR(ErrorManagement::Information, " Close Device Status Reg %d, 0x%x", rc, statusReg);
        ioctl(boardFileDescriptor, ATCA_PCIE_IOPG_STATUS, &statusReg);
         //rc = ioctl(boardFileDescriptor, ATCA_PCIE_IOPT_DMA_RESET);
         close(boardFileDescriptor);
@@ -154,9 +154,9 @@ bool AtcaIopADC::Initialise(StructuredDataI& data) {
         }
     }
     if (ok) {
-        ok = data.Read("BoardId", boardId);
+        ok = data.Read("DeviceDmaName", deviceDmaName);
         if (!ok) {
-            REPORT_ERROR(ErrorManagement::ParametersError, "The BoardId shall be specified");
+            REPORT_ERROR(ErrorManagement::ParametersError, "The DeviceDmaName shall be specified");
         }
     }
     if (ok) {
@@ -340,11 +340,10 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
             REPORT_ERROR(ErrorManagement::ParametersError, "The signal in position %d shall have 32 bits and %d were specified", i, uint16(GetSignalType(i).numberOfBits));
         }
     }
-
     StreamString fullDeviceName;
     //Configure the board
     if (ok) {
-        ok = fullDeviceName.Printf("%s_%d", deviceName.Buffer(), boardId);
+        ok = fullDeviceName.Printf("%s", deviceName.Buffer());
     }
     if (ok) {
         ok = fullDeviceName.Seek(0LLU);
@@ -358,21 +357,21 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
         else
             REPORT_ERROR(ErrorManagement::Information, "Open device %s OK", fullDeviceName);
     }
-    StreamString fullDmaName;
+    ok = fullDeviceName.Seek(0LLU);
     if (ok) {
-        ok = fullDmaName.Printf("%s_dmart_%d", deviceName.Buffer(), boardId);
+        ok = fullDeviceName.Printf("%s", deviceDmaName.Buffer());
     }
     if (ok) {
-        ok = fullDmaName.Seek(0LLU);
+        ok = fullDeviceName.Seek(0LLU);
     }
     if (ok) {
-        boardDmaDescriptor = open(fullDmaName.Buffer(), O_RDWR);
+        boardDmaDescriptor = open(fullDeviceName.Buffer(), O_RDWR);
         ok = (boardDmaDescriptor > -1);
         if (!ok) {
-            REPORT_ERROR_PARAMETERS(ErrorManagement::ParametersError, "Could not open DMA device %s", fullDmaName);
+            REPORT_ERROR_PARAMETERS(ErrorManagement::ParametersError, "Could not open DMA device %s", fullDeviceName);
         }
         else
-            REPORT_ERROR(ErrorManagement::Information, "Open device %s OK", fullDmaName);
+            REPORT_ERROR(ErrorManagement::Information, "Open DMA device %s OK", fullDeviceName);
     }
 
     //mappedDmaBase = (int32 *) mmap(0,  getpagesize() * NUMBER_OF_BUFFERS,
@@ -380,7 +379,7 @@ bool AtcaIopADC::SetConfiguredDatabase(StructuredDataI& data) {
             PROT_READ, MAP_SHARED, boardDmaDescriptor, 0);
     if (mappedDmaBase == MAP_FAILED){
         ok = false;
-        REPORT_ERROR(ErrorManagement::FatalError, "Error Mapping Device %s", fullDmaName);
+        REPORT_ERROR(ErrorManagement::FatalError, "Error Mapping DMA Memory Device %s", fullDeviceName);
     }
     mappedDmaSize = getpagesize();
 
@@ -611,6 +610,7 @@ bool AtcaIopADC::PrepareNextState(const char8* const currentStateName, const cha
     bool ok = true;
     if (executor.GetStatus() == EmbeddedThreadI::OffState) {
         ok = executor.Start();
+        REPORT_ERROR(ErrorManagement::Information, "Executor Start");
     }
     counterAndTimer[0] = 0u;
     //counterAndTimer[1] = 0u;
@@ -676,9 +676,6 @@ ErrorManagement::ErrorType AtcaIopADC::Execute(ExecutionInfo& info) {
     float64 t = counterAndTimer[1];
     t /= 1e6;
     // Compute simulated Sinus Signals
-    for (s=0u; s<adcSamplesPerCycle; s++) {
-        t += adcPeriod;
-    }
     return err;
 }
 

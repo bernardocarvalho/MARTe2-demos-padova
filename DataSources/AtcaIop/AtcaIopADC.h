@@ -248,16 +248,23 @@ namespace MARTe {
             /**
              * The board identifier
              */
-            uint32 boardId;
+            //uint32 boardId;
             /**
              * The numberOfChannels
              */
             uint32 numberOfChannels;
+            /**
+             * The FPGA ADC Decimation factor from 2MSPS
+             */
             uint32 rtDecimation;
             /**
              * The board device name
              */
             StreamString deviceName;
+            /**
+             * The board device name
+             */
+            StreamString deviceDmaName;
             /**
              * The board file descriptor
              */
