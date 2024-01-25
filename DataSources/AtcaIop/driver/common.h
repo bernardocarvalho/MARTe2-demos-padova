@@ -28,8 +28,7 @@
 #include <linux/delay.h> /* usleep_range */
 #include <linux/dma-mapping.h>
 
-#include "atca-v6-pcie.h"
-#include "atca-v6-pcie-ioctl.h"
+#include "../include/atca-v6-pcie.h"
 
 /*************************************************************************/
 /* Private data types and structures */
@@ -117,59 +116,60 @@ typedef struct _DMA_CURR_BUFF {
 } DMA_CURR_BUFF;
 
 typedef struct _PCIE_SHAPI_HREGS {
-  volatile u32 shapiVersion;       /*Offset 0x00 ro */
-  volatile u32 firstModAddress;    /*Offset 0x04 ro */
-  volatile u32 hwIDhwVendorID;     /*Offset 0x08 ro*/
-  volatile u32 devFwIDdevVendorID; /*Offset 0x0C ro */
-  volatile u32 fwVersion;          /*Offset 0x10 ro */
-  volatile u32 fwTimeStamp;        /*Offset 0x14 ro*/
-  volatile u32 fwName[3];          /*Offset 0x18 ro*/
-  volatile u32 devCapab;           /*Offset 0x24 ro*/
-  volatile u32 devStatus;          /*Offset 0x28 ro*/
-  volatile u32 devControl;         /*Offset 0x2C rw*/
-  volatile u32 devIntMask;         /*Offset 0x30 rw*/
-  volatile u32 devIntFlag;         /*Offset 0x34 ro*/
-  volatile u32 devIntActive;       /*Offset 0x38 ro*/
-  volatile u32 scratchReg;         /*Offset 0x3C rw*/
+  u32 shapiVersion;       /*Offset 0x00 ro */
+  u32 firstModAddress;    /*Offset 0x04 ro */
+  u32 hwIDhwVendorID;     /*Offset 0x08 ro*/
+  u32 devFwIDdevVendorID; /*Offset 0x0C ro */
+  u32 fwVersion;          /*Offset 0x10 ro */
+  u32 fwTimeStamp;        /*Offset 0x14 ro*/
+  u32 fwName[3];          /*Offset 0x18 ro*/
+  u32 devCapab;           /*Offset 0x24 ro*/
+  u32 devStatus;          /*Offset 0x28 ro*/
+  u32 devControl;         /*Offset 0x2C rw*/
+  u32 devIntMask;         /*Offset 0x30 rw*/
+  u32 devIntFlag;         /*Offset 0x34 ro*/
+  u32 devIntActive;       /*Offset 0x38 ro*/
+  u32 scratchReg;         /*Offset 0x3C rw*/
 } PCIE_SHAPI_HREGS;
 
 typedef struct _SHAPI_MOD_DMA_HREGS {
-  volatile u32 shapiVersion;       /*Offset 0x00 ro */
-  volatile u32 nextModAddress;     /*Offset 0x04 ro */
-  volatile u32 modFwIDmodVendorID; /*Offset 0x08 ro*/
-  volatile u32 modVersion;         /*Offset 0x0C ro */
-  volatile u32 modName[2];         /*Offset 0x10 ro*/
-  volatile u32 modCapab;           /*Offset 0x18 ro*/
-  volatile u32 modStatus;          /*Offset 0x1C ro*/
-  volatile u32 modControl;         /*Offset 0x20 rw*/
-  volatile u32 modIntID;           /*Offset 0x24 rw*/
-  volatile u32 modIntFlagClear;    /*Offset 0x28 ro*/
-  volatile u32 modIntMask;         /*Offset 0x2C rw*/
-  volatile u32 modIntFlag;         /*Offset 0x30 ro*/
-  volatile u32 modIntActive;       /*Offset 0x34 ro*/
-  volatile u32 _reserved1[2];      /*Offset 0x38 - 0x40 na */
-  volatile u32 dmaStatus;          /* Offset 0x40 ro */
-  volatile u32 dmaControl;         /* Offset 0x44 rw */
-  volatile u32 dmaByteSize;        /* Offset 0x48 rw */
-  volatile u32 dmaMaxBytes;        /* Offset 0x4C r */
-  volatile u32 dmaTlpPayload;      /* Offset 0x50 ro */
-  volatile u32 _reserved2;         /* Offset 0x54 na */
-  volatile u32 chopCountrs;        /* Offset 0x58 rw */
-  volatile u32 dmaDebug0;          /* Offset 0x5C ro */
-  volatile u32 dmaDebug1;          /* Offset 0x60 ro */
-  volatile u32 _reserved3[7];     /* Offset 0x64 - 0x7C na */
-  volatile u32 dmaBusAddr[DMA_BUFFS];       /* Offset 0x80 rw */
-  volatile u32 dmaPollBusAddr[DMA_BUFFS];   /* Offset 0xA0 rw */
+  u32 shapiVersion;       /*Offset 0x00 ro */
+  u32 nextModAddress;     /*Offset 0x04 ro */
+  u32 modFwIDmodVendorID; /*Offset 0x08 ro*/
+  u32 modVersion;         /*Offset 0x0C ro */
+  u32 modName[2];         /*Offset 0x10 ro*/
+  u32 modCapab;           /*Offset 0x18 ro*/
+  u32 modStatus;           /*Offset 0x1C ro*/
+  u32 modControl;          /*Offset 0x20 rw*/
+  u32 modIntID;            /*Offset 0x24 rw*/
+  u32 modIntFlagClear;     /*Offset 0x28 ro*/
+  u32 modIntMask;          /*Offset 0x2C rw*/
+  u32 modIntFlag;          /*Offset 0x30 ro*/
+  u32 modIntActive;        /*Offset 0x34 ro*/
+  u32 _reserved1[2];       /*Offset 0x38 - 0x40 na */
+  u32 dmaStatus;           /* Offset 0x40 ro */
+  u32 dmaControl;          /* Offset 0x44 rw */
+  u32 dmaByteSize;         /* Offset 0x48 rw */
+  u32 dmaMaxBytes;         /* Offset 0x4C r */
+  u32 dmaTlpPayload;       /* Offset 0x50 ro */
+  u32 _reserved2;          /* Offset 0x54 na */
+  u32 chopCountrs;         /* Offset 0x58 rw */
+  u32 chopDisable;         /* Offset 0x5C rw */
+  u32 chopDefault;         /* Offset 0x60 rw */
+  u32 dacsReg;             /* Offset 0x64 na */
+  u32 dmaDebug0;           /* Offset 0x68 ro */
+  u32 dmaDebug1;           /* Offset 0x6C ro */
+  u32 _reserved4[4];       /* Offset  0x70 - 0x7C na */
+  u32 dmaBusAddr[DMA_BUFFS];       /* Offset 0x80 rw */
+  u32 dmaPollBusAddr[DMA_BUFFS];   /* Offset 0xA0 rw */
   //volatile u32 _reserved4[7];      /* Offset 0xA4 na */
-  volatile u32 eOffsets[32];       /* Offset 0xC0 rw */
-  volatile u32 wOffsets[32];       /* Offset 0x180 rw */
+  u32 eOffsets[32];       /* Offset 0xC0 rw */
+  u32 wOffsets[32];       /* Offset 0x180 rw */
 
-  ////  EVENT_REGS                timingRegs[NUM_TIMERS];
 } SHAPI_MOD_DMA_HREGS;
 
 /*Structure for pcie access*/
 typedef struct _PCIE_DEV {
-  /* char device */
   struct pci_dev *pdev; /* pci device */
   struct cdev cdev;     /* linux char device structure   */
   dev_t devno;          /* char device number */
@@ -177,16 +177,18 @@ typedef struct _PCIE_DEV {
   struct cdev dmach0_cdev; /* linux char device structure for DMA chan 0 */
   dev_t dmach0_devno;      /* char device number for DMA */
   struct device *dmach0_dev;
-  struct cdev dmach1_cdev; /* linux char device structure for DMA chan 1 */
-  dev_t dmach1_devno;      /* char device number for DMA */
-  struct device *dmach1_dev;
+  struct cdev dac_cdev; /* linux char device structure for DMA chan 1 */
+  dev_t dac_devno;      /* char device number for DMA */
+  struct device *dac_dev;
   unsigned char irq;
   spinlock_t irq_lock; // static
+  struct mutex io_lock;   /* protects concurrent access */
   unsigned int got_regions;
   unsigned int msi_enabled;
   unsigned int counter;
   unsigned int counter_hw;
   unsigned int open_count;
+  struct mutex open_lock;
   struct semaphore open_sem; // mutual exclusion semaphore
   wait_queue_head_t rd_q;    // read  queues
   long wt_tmout;             // read timeout

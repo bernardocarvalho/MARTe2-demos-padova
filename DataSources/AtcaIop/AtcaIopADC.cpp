@@ -38,7 +38,7 @@
 #include "AdvancedErrorManagement.h"
 #include "MemoryMapSynchronisedInputBroker.h"
 #include "AtcaIopADC.h"
-#include "atca-v6-pcie-ioctl.h"
+#include "atca-v6-iop-ioctl.h"
 
 /*---------------------------------------------------------------------------*/
 /*                           Static definitions                              */

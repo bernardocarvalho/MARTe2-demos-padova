@@ -1,19 +1,19 @@
 /**
  * IOCTL Definitions for the Linux Device Driver
- *
+ * Should be synchronized with:
+ * https://github.com/bernardocarvalho/atca-iop-stream/blob/master/linux-software/include/atca-v6-pcie-ioctl.h
  *
  */
 
-#ifndef _ATCA_PCIE_IOPTL_H_
-#define _ATCA_PCIE_IOPTL_H_
+#ifndef _ATCA_IOP_IOPTL_H_
+#define _ATCA_IOP_IOPTL_H_
 
 #include <sys/ioctl.h>
-//#include "atca-v6-pcie.h"
 
 #define ADC_CHANNELS    16
 #define DMA_BUFFS 8 // Number of DMA ch0 buffs
 
-/* 256 + 3840 = 4096 B (PAGE_SIZE) data packet*/
+/* 256 + 3840 = 4096 B (PAGE_SIZE) data packet
 typedef struct _DMA_CH1_PCKT {
     volatile uint32_t head_time_cnt;
     volatile uint32_t header; // h5431BACD
@@ -22,7 +22,7 @@ typedef struct _DMA_CH1_PCKT {
     volatile uint32_t footer; // h5431BACD
     uint8_t page_fill[3840];
 } DMA_CH1_PCKT;
-
+*/
 struct atca_eo_config {
   int32_t offset[ADC_CHANNELS];
 };
@@ -78,13 +78,16 @@ struct atca_wo_config {
 #define ATCA_PCIE_IOPG_WO_OFFSETS                            \
   _IOR(ATCA_PCIE_IOP_MAGIC, 24, struct atca_wo_config)
 
-//#define ATCA_PCIE_IOPS_CHOP_CHANGE_COUNT _IOW(ATCA_PCIE_IOP_MAGIC, 22, u_int32_t)
-//#define ATCA_PCIE_IOPG_CHOP_CHANGE_COUNT _IOR(ATCA_PCIE_IOP_MAGIC, 23, u_int32_t)
-//#define ATCA_PCIE_IOPT_CHOP_RECONSTRUCT_ON  _IO(ATCA_PCIE_IOP_MAGIC, 24)
-//#define ATCA_PCIE_IOPT_CHOP_RECONSTRUCT_OFF _IO(PCIE_ATCA_IOC_MAGIC, 25)
+#define ATCA_PCIE_IOPS_CONTROL _IOW(ATCA_PCIE_IOP_MAGIC,     25, u_int32_t)
+#define ATCA_PCIE_IOPG_CONTROL _IOR(ATCA_PCIE_IOP_MAGIC,     26, u_int32_t)
 
-#define ATCA_PCIE_IOP_MAXNR 24
+#define ATCA_PCIE_IOPS_CHOP_DISABLE _IOW(ATCA_PCIE_IOP_MAGIC, 27, u_int32_t)
+#define ATCA_PCIE_IOPG_CHOP_DISABLE _IOR(ATCA_PCIE_IOP_MAGIC, 28, u_int32_t)
 
-#endif /* _ATCA_PCIE_IOPTL_H_ */
+#define ATCA_PCIE_IOPG_DACS_REG _IOR(ATCA_PCIE_IOP_MAGIC, 29, u_int32_t)
+
+#define ATCA_PCIE_IOP_MAXNR 29
+
+#endif /* _ATCA_IOP_IOPTL_H_ */
 
 //  vim: syntax=cpp ts=4 sw=4 sts=4 sr et

@@ -13,20 +13,22 @@
 
 /* The number of available minor numbers */
 #define ATCA_MINOR_BASE (0)    //
-#define ATCA_MINOR_COUNT (255) //
+#define ATCA_MINOR_COUNT (64) // Max 14 * 3 device minor number
+
+#define FPGA_FW_VERSION  0x02010000   // MAJOR/MINOR/PATCH Version numbers
 
 //#define MINOR_NUMBERS 2 // 0xffff
 
 /* Node name of the char device */
 
 #define NODENAMEFMT "atca_v6_%d"
-#define DMACH0NODENAMEFMT "atca_v6_dma_ch0_%d"
-#define DMACH1NODENAMEFMT "atca_v6_dma_ch1_%d"
+#define DMACH0NODENAMEFMT "atca_v6_dmart_%d"
+#define DACNODENAMEFMT "atca_v6_dac_%d"
 
-#define DRV_NAME "atca_v6" //"atca_v6_drv"
+#define DRV_NAME "atca_v6"
 
-/* Maximum number of devices*/
-#define MAXDEVICES 14
+/* Maximum number of devices on as 14-slot ATCA crate*/
+#define MAXDEVICES 12
 
 #define DMA_BUFFS 8 // Number of DMA Buffs
 

@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 /**
  *
  * @file kc705-unlocked-ioctl.c
@@ -28,6 +35,7 @@
 /* Internal definitions for all parts (includes, prototypes, data, macros) */
 #include "common.h"
 
+#include "../include/atca-v6-pcie-ioctl.h"
 
 /**
  * _unlocked_ioctl
@@ -41,17 +49,25 @@ long _unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
     struct atca_eo_config eo_obj;
     struct atca_wo_config wo_obj;
     COMMAND_REG cReg;
-    STATUS_REG sReg;
-    PCIE_DEV *pciDev; /* for device information */
+    //STATUS_REG sReg;
+    PCIE_DEV *pcieDev; /* for device information */
+    void __iomem *reg;
+    //u32 w;
 
     u32 byteSize;
 
     /* retrieve the device information  */
-    pciDev = (PCIE_DEV *)filp->private_data;
+    pcieDev = (PCIE_DEV *)filp->private_data;
 
-    sReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaStatus);
-    if (sReg.reg32 == 0xFFFFFFFF)
-        PDEBUG("ioctl status Reg:0x%X, cmd: 0x%X\n", sReg.reg32, cmd);
+    reg = &pcieDev->pModDmaHregs->dmaStatus;
+    mutex_lock(&pcieDev->io_lock);
+    tmp = ioread32(reg);
+    mutex_unlock(&pcieDev->io_lock);
+    err = (tmp == 0xFFFFFFFF);
+    if (err) {
+        printk(KERN_ERR "ioctl status Reg: 0x08%X, cmd: 0x%X\n", tmp, cmd);
+        return -EFAULT;
+    }
 
     /**
      * extract the type and number bitfields, and don't decode
@@ -79,119 +95,109 @@ long _unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
     switch (cmd) {
 
         case ATCA_PCIE_IOPG_STATUS:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
+            //spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            reg = &pcieDev->pModDmaHregs->dmaStatus;
+            mutex_lock(&pcieDev->io_lock);
             //  ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- ----- -----
-            tmp = ioread32((void *) &pciDev->pModDmaHregs->dmaStatus);
-            printk(KERN_DEBUG "%s dmaStatus:0x%08X, dmaDebug0:0x%08X, dmaDebug1:0x%08X\n", DRV_NAME, tmp,
-                ioread32((void *) &pciDev->pModDmaHregs->dmaDebug0),
-                ioread32((void *) &pciDev->pModDmaHregs->dmaDebug1));
+            tmp = ioread32(reg);
+            //tmp = ioread32((void *) &pcieDev->pModDmaHregs->dmaStatus);
+            //printk(KERN_DEBUG "%s dmaStatus:0x%08X, dmaDebug0:0x%08X, dmaDebug1:0x%08X\n", DRV_NAME, tmp,
+            //    ioread32((void *) &pciDev->pModDmaHregs->dmaDebug0),
+            //    ioread32((void *) &pciDev->pModDmaHregs->dmaDebug1));
             //  ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            mutex_unlock(&pcieDev->io_lock);
+            //spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
 
             if (copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
                 return -EFAULT;
             break;
 
         case ATCA_PCIE_IOPT_IRQ_ENABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            cReg.reg32 = ioread32((void *) &pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.DmaIntE = 1;
-            iowrite32(cReg.reg32, (void *) &pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPT_IRQ_DISABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.DmaIntE = 0;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPT_ACQ_ENABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
-            pciDev->mismatches = 0;
-            /*pciDev->curr_buf = 0;*/
-            pciDev->max_buffer_count = 0;
-            atomic_set(&pciDev->rd_condition, 0);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
+            pcieDev->mismatches = 0;
+            pcieDev->max_buffer_count = 0;
+            atomic_set(&pcieDev->rd_condition, 0);
             cReg.cmdFlds.AcqE = 1;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPT_ACQ_DISABLE:
-            retval = pciDev->max_buffer_count;
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            retval = pcieDev->max_buffer_count;
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.AcqE = 0;
             cReg.cmdFlds.StrG = 0;
-            //    cReg.cmdFlds.STRG=0;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
 
             break;
         case ATCA_PCIE_IOPT_DMA_ENABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.DmaE = 1;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
-
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
         case ATCA_PCIE_IOPT_DMA_DISABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.DmaE = 0;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            // ----- ----- ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
 
             break;
         case ATCA_PCIE_IOPT_DMA_RESET:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
             // ----- ----- DEVICE SPECIFIC CODE ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            cReg.reg32 = ioread32((void *)&pcieDev->pModDmaHregs->dmaControl);
             cReg.cmdFlds.DmaRst = 1;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            byteSize = ioread32((void *)&pciDev->pModDmaHregs->dmaByteSize);
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
+            byteSize = ioread32((void *)&pcieDev->pModDmaHregs->dmaByteSize);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             // clear DMA buffers
             for(i = 0; i < DMA_BUFFS; i++){
-               memset(pciDev->dmaIO.buf[i].addr_v, 0, byteSize);
-               memset(pciDev->dmaRT.buf[i].addr_v, 0, PAGE_SIZE);
-            //memset(pciDev->dmaPollBuff.addr_v, 0, PAGE_SIZE);
+               memset(pcieDev->dmaIO.buf[i].addr_v, 0, byteSize);
+               memset(pcieDev->dmaRT.buf[i].addr_v, 0, PAGE_SIZE);
+            //memset(pcieDev->dmaPollBuff.addr_v, 0, PAGE_SIZE);
             }
             //    udelay(10);
             cReg.cmdFlds.DmaRst = 0;
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
             // ----- ----- DEVICE SPECIFIC CODE ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             udelay(20);
             break;
             /*
                case ATCA_PCIE_IOPG_COUNTER:
-               spin_lock_irqsave(&pciDev->irq_lock, flags);
-               tmp = PCIE_READ32((void*) &pciDev->pHregs->hwcounter);
-               spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+               spin_lock_irqsave(&pcieDev->irq_lock, flags);
+               tmp = PCIE_READ32((void*) &pcieDev->pHregs->hwcounter);
+               spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
                if(copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
                return -EFAULT;
                break;
@@ -199,72 +205,71 @@ long _unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
         case ATCA_PCIE_IOPS_RDTMOUT:
             retval = __get_user(tmp, (int __user *)arg);
             if (!retval)
-                pciDev->wt_tmout = tmp * HZ;
+                pcieDev->wt_tmout = tmp * HZ;
             break;
 
 
         case ATCA_PCIE_IOPT_SOFT_TRIG:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            //  ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.StrG = 1;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- ----- ----- ----- DEVICE SPECIFIC CODE ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPS_DMA_SIZE:
             retval = __get_user(tmp, (int __user *)arg);
             if (!retval) {
-                spin_lock_irqsave(&pciDev->irq_lock, flags);
-                iowrite32(tmp, (void *)&pciDev->pModDmaHregs->dmaByteSize); // write the buffer size to the FPGA
-                spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+                spin_lock_irqsave(&pcieDev->irq_lock, flags);
+                iowrite32(tmp, (void *)&pcieDev->pModDmaHregs->dmaByteSize); // write the buffer size to the FPGA
+                spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             }
             break;
 
         case ATCA_PCIE_IOPG_DMA_SIZE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            tmp = ioread32((void *)&pciDev->pModDmaHregs->dmaByteSize);
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            tmp = ioread32((void *)&pcieDev->pModDmaHregs->dmaByteSize);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             if (copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
                 return -EFAULT;
             break;
 
         case ATCA_PCIE_IOPT_STREAM_ENABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.StreamE = 1;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            PDEBUG("%s ioctl control Reg:0x%08X\n", DRV_NAME,
-                    ioread32((void *) &pciDev->pModDmaHregs->dmaControl));
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            printk(KERN_DEBUG "%s STREAM_ENABLE: dmaControl: 0x%08X\n", DRV_NAME, ioread32(reg));
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPT_STREAM_DISABLE:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.StreamE = 0;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPT_CHOP_ON:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.ChopOn = 1;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // -----  DEVICE SPECIFIC CODE ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPT_CHOP_OFF:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            // ----- ----- DEVICE SPECIFIC CODE ----- -----
-            cReg.reg32 = ioread32((void *)&pciDev->pModDmaHregs->dmaControl);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            cReg.reg32 = ioread32(reg);
             cReg.cmdFlds.ChopOn = 0;
-            iowrite32(cReg.reg32, (void *)&pciDev->pModDmaHregs->dmaControl);
-            // ----- ----- DEVICE SPECIFIC CODE ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            iowrite32(cReg.reg32, reg);
+            mutex_unlock(&pcieDev->io_lock);
             break;
 
         case ATCA_PCIE_IOPS_EO_OFFSETS:
@@ -273,24 +278,24 @@ long _unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
                 /*pr_err("copy_from_user failed.\n");*/
                 return -EFAULT;
             }
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
             // ----- ----- DEVICE SPECIFIC CODE ----- -----
             for (i = 0; i < ADC_CHANNELS; i++) {
                 PDEBUGG("ioctl S eo_off Reg:%d, off: 0x%08X", i, eo_obj.offset[i]);
                 iowrite32(eo_obj.offset[i],
-                        (void *)&pciDev->pModDmaHregs->eOffsets[i]);
+                        (void *)&pcieDev->pModDmaHregs->eOffsets[i]);
             }
             // ----- ----- DEVICE SPECIFIC CODE ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             break;
 
         case ATCA_PCIE_IOPG_EO_OFFSETS:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
             for (i = 0; i < ADC_CHANNELS; i++) {
-                eo_obj.offset[i] = ioread32((void *)&pciDev->pModDmaHregs->eOffsets[i]);
+                eo_obj.offset[i] = ioread32((void *)&pcieDev->pModDmaHregs->eOffsets[i]);
                 PDEBUGG("ioctl G eo_off Reg:%d, off: %d", i, eo_obj.offset[i]);
             }
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             if (copy_to_user((void __user *)arg, &eo_obj, sizeof(struct atca_eo_config)))
                 return -EFAULT;
             break;
@@ -301,24 +306,24 @@ long _unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
                 /*pr_err("copy_from_user failed.\n");*/
                 return -EFAULT;
             }
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
             // ----- ----- DEVICE SPECIFIC CODE ----- -----
             for (i = 0; i < ADC_CHANNELS; i++) {
                 PDEBUGG("ioctl S wo_off Reg:%d, off: %d", i, wo_obj.offset[i]);
                 iowrite32(wo_obj.offset[i],
-                        (void *)&pciDev->pModDmaHregs->wOffsets[i]);
+                        (void *)&pcieDev->pModDmaHregs->wOffsets[i]);
             }
             // ----- ----- DEVICE SPECIFIC CODE ----- -----
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             break;
 
         case ATCA_PCIE_IOPG_WO_OFFSETS:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
             for (i = 0; i < ADC_CHANNELS; i++) {
-                wo_obj.offset[i] = ioread32((void *)&pciDev->pModDmaHregs->wOffsets[i]);
+                wo_obj.offset[i] = ioread32((void *)&pcieDev->pModDmaHregs->wOffsets[i]);
                 PDEBUGG("ioctl G wo_off Reg:%d, off: %d", i, wo_obj.offset[i]);
             }
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             if (copy_to_user((void __user *)arg, &wo_obj, sizeof(struct atca_wo_config)))
                 return -EFAULT;
             break;
@@ -326,41 +331,68 @@ long _unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
         case ATCA_PCIE_IOPS_CHOP_COUNTERS:
             retval = __get_user(tmp, (int __user *)arg);
             if (!retval) {
-                PDEBUG("ioctl S chopCounters Reg: 0x%08X", tmp);
-                spin_lock_irqsave(&pciDev->irq_lock, flags);
-                iowrite32(tmp, (void *)&pciDev->pModDmaHregs->chopCountrs);
-                spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+                PDEBUGG("ioctl S chopCounters Reg: 0x%08X", tmp);
+                spin_lock_irqsave(&pcieDev->irq_lock, flags);
+                iowrite32(tmp, (void *)&pcieDev->pModDmaHregs->chopCountrs);
+                spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             }
             break;
 
         case ATCA_PCIE_IOPG_CHOP_COUNTERS:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            tmp = ioread32((void *)&pciDev->pModDmaHregs->chopCountrs);
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
-            PDEBUG("ioctl G chopCounters Reg: 0x%08X", tmp);
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            tmp = ioread32((void *)&pcieDev->pModDmaHregs->chopCountrs);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
+            PDEBUGG("ioctl G chopCounters Reg: 0x%08X", tmp);
             if (copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
                 return -EFAULT;
             break;
 
         case ATCA_PCIE_IOPG_CONTROL:
-            spin_lock_irqsave(&pciDev->irq_lock, flags);
-            tmp = ioread32((void *) &pciDev->pModDmaHregs->dmaControl);
-            spin_unlock_irqrestore(&pciDev->irq_lock, flags);
+            reg = &pcieDev->pModDmaHregs->dmaControl;
+            mutex_lock(&pcieDev->io_lock);
+            tmp = ioread32(reg);
+            mutex_unlock(&pcieDev->io_lock);
+            //spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            //tmp = ioread32((void *) &pcieDev->pModDmaHregs->dmaControl);
+            //spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
+            if (copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
+                return -EFAULT;
+            break;
+        
+        case ATCA_PCIE_IOPS_CHOP_DISABLE:
+            retval = __get_user(tmp, (int __user *)arg);
+            if (!retval) {
+                spin_lock_irqsave(&pcieDev->irq_lock, flags);
+                iowrite32(tmp, (void *)&pcieDev->pModDmaHregs->chopDisable);
+                spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
+            }
+            break;
+
+        case ATCA_PCIE_IOPG_CHOP_DISABLE:
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            tmp = ioread32((void *) &pcieDev->pModDmaHregs->chopDisable);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
+            if (copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
+                return -EFAULT;
+            break;
+        /*
+        case ATCA_PCIE_IOPS_DACS_REG:
+            retval = __get_user(tmp, (int __user *)arg);
+            if (!retval) {
+                spin_lock_irqsave(&pcieDev->irq_lock, flags);
+                iowrite32(tmp, (void *)&pcieDev->pModDmaHregs->dacsReg);
+                spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
+            }
+            break;
+*/
+        case ATCA_PCIE_IOPG_DACS_REG:
+            spin_lock_irqsave(&pcieDev->irq_lock, flags);
+            tmp = ioread32((void *)&pcieDev->pModDmaHregs->dacsReg);
+            spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
             if (copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
                 return -EFAULT;
             break;
 
-            /*
-             *  case KC705_PCIE_IOCG_TMR0COUNT:
-             *    spin_lock_irqsave(&pciDev->irq_lock, flags);
-             *      tmp = ioread32((void*) &pciDev->pHregs->timer0Count);
-             *    spin_unlock_irqrestore(&pciDev->irq_lock, flags);
-             *    if(copy_to_user((void __user *)arg, &tmp, sizeof(u32)))
-             *      return -EFAULT;
-             *    break;
-             *
-
-            */
         default: /* redundant, as cmd was checked against MAXNR */
             return -ENOTTY;
     }

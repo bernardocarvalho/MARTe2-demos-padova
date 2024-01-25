@@ -68,7 +68,11 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id);
 void _remove(struct pci_dev *pdev);
 
 static struct pci_driver _atca_pci = {
-    .name = DRV_NAME, .id_table = ids, .probe = _probe, .remove = _remove};
+    .name = DRV_NAME,
+    .id_table = ids,
+    .probe = _probe,
+    .remove = _remove
+};
 
 static const struct file_operations ctrl_fops;
 
@@ -91,7 +95,7 @@ int _open(struct inode *inode, struct file *filp) {
     up(&pcieDev->open_sem);
     buffer_number = ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus); // testing
     pcieDev->curr_buf = (0x07 & buffer_number);
-    PDEBUG("open() curr_buf %d \n", pcieDev->curr_buf);
+    PDEBUGG("open() curr_buf %d \n", pcieDev->curr_buf);
 
     return 0;
 }
@@ -103,11 +107,13 @@ int _open(struct inode *inode, struct file *filp) {
 int _release(struct inode *inode, struct file *filp) {
     PCIE_DEV *pcieDev; /* device information */
 
+    void __iomem *reg;
     /**    retrieve the device information  */
     pcieDev = container_of(inode->i_cdev, PCIE_DEV, cdev);
 
-    PDEBUG("Close Mod Status 0x%08x\n",
-            ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus));
+    reg = &pcieDev->pModDmaHregs->dmaStatus;
+    PDEBUG("Close Mod Status 0x%08x\n", ioread32(reg));
+            //ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus));
     PDEBUG("Close Mod dmaControl 0x%08x\n",
             ioread32((void *)&pcieDev->pModDmaHregs->dmaControl));
     down(&pcieDev->open_sem);
@@ -126,13 +132,17 @@ ssize_t _read(struct file *filp, char *buf, size_t count, loff_t *f_pos) {
     int rv;
     ssize_t retval = 0;
     COMMAND_REG cReg;
+    void __iomem *reg;
 
     PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data; /* device information */
 
-    PDEBUGG("_read  count %d \n", (int)count);
+    PDEBUGG("_read  count %d \n", (int) count);
+
+    reg = &pcieDev->pModDmaHregs->dmaByteSize;
     maxByteSize = ioread32((void *)&pcieDev->pModDmaHregs->dmaByteSize);
-    PDEBUGG("read Mod Status %d\n",
-            ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus) & 0x7);
+    reg = &pcieDev->pModDmaHregs->dmaStatus;
+    PDEBUGG("read Mod Status %d\n", ioread32(reg) & 0x7);
+//            ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus) & 0x7);
     PDEBUGG("read curr_buf 0x%X \n", pcieDev->curr_buf);
 
     /*check size ligned, if not return error, also alloc memory */
@@ -142,11 +152,14 @@ ssize_t _read(struct file *filp, char *buf, size_t count, loff_t *f_pos) {
         retval = -1;
         goto out;
     }
-    cReg.reg32 = ioread32((void *)&pcieDev->pModDmaHregs->dmaControl);
+    reg = &pcieDev->pModDmaHregs->dmaControl;
+    cReg.reg32 = ioread32(reg);
+    //(void *)&pcieDev->pModDmaHregs->dmaControl);
     PDEBUGG("_read command 0x%08x\n", cReg.reg32);
     cReg.cmdFlds.DmaE = 1;
     //
-    iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
+    iowrite32(cReg.reg32, reg);
+    //(void *)&pcieDev->pModDmaHregs->dmaControl);
 
     if (atomic_read(&pcieDev->rd_condition) == 0) {
         if (wait_event_interruptible_timeout(
@@ -177,7 +190,8 @@ ssize_t _read(struct file *filp, char *buf, size_t count, loff_t *f_pos) {
         pcieDev->curr_buf++;
 out:
     cReg.cmdFlds.DmaE = 0;
-    iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
+    iowrite32(cReg.reg32, reg);
+   // iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
     return retval;
 }
 
@@ -192,8 +206,6 @@ ssize_t _pcie_write(struct file *file, const char *buf, size_t count,
 
 /* maps the PCIe BAR 1 into user space for memory-like access using mmap() */
 int _bridge_mmap(struct file *filp, struct vm_area_struct *vma) {
-    // struct xdma_dev *xdev;
-    // struct xdma_cdev *xcdev = (struct xdma_cdev *)file->private_data;
     // https://github.com/claudioscordino/mmap_alloc/blob/master/mmap_alloc.c
     PCIE_DEV *pcieDev = (PCIE_DEV *)filp->private_data; /* device information */
     unsigned long bar_idx = 1;
@@ -203,9 +215,7 @@ int _bridge_mmap(struct file *filp, struct vm_area_struct *vma) {
     unsigned long psize;
     int rv;
 
-    /*rv = xcdev_check(__func__, xcdev, 0);*/
-    /*xdev = xcdev->xdev;*/
-    PDEBUG("vm_pgoff=%ld, has DMA: %d\n", vma->vm_pgoff,  0); // off=0, has DMA: 0
+    PDEBUGG("vm_pgoff=%ld, has DMA: %d\n", vma->vm_pgoff,  0); // off=0, has DMA: 0
 
     off = vma->vm_pgoff << PAGE_SHIFT;
     /* BAR physical address */
@@ -286,19 +296,17 @@ int _dmach0_release(struct inode *inode, struct file *filp) {
 
 /*
  * maps the DMA buffers (BAR 0) into user space for memory-like access using
- * mmap() 
+ * mmap()
  */
 int _dmach0_mmap(struct file *filp, struct vm_area_struct *vma) {
-    // https://github.com/claudioscordino/mmap_alloc/blob/master/mmap_alloc.c
     PCIE_DEV *pcieDev = (PCIE_DEV *) filp->private_data; /* device information */
     unsigned long off, phys, vsize, start;
     /*unsigned long bar_idx = 0;*/
-    //u8 *buffer_virt;
 
     int rv = 0, i;
     off = vma->vm_pgoff << PAGE_SHIFT;
     /*
-     *       pages must not be cached as this would result in cache line sized
+     * pages must not be cached as this would result in cache line sized
      * accesses to the end point
      */
     vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
@@ -331,60 +339,19 @@ int _dmach0_mmap(struct file *filp, struct vm_area_struct *vma) {
         }
         start += vsize;
     }
-    PDEBUG("vma=0x%p, vma->vm_start=0x%lx, phys=0x%lx, size=%lu = %d\n",
+    PDEBUGG("vma=0x%p, vma->vm_start=0x%lx, phys=0x%lx, size=%lu = %d\n",
             vma, vma->vm_start, phys >> PAGE_SHIFT, vsize, rv);
 
     return 0;
 }
 
-static const struct file_operations dmach0_fops = {
-    .owner      = THIS_MODULE,
-    .open       = _dmach0_open,
-    //    .read =
-    //    .write =
-    //   .unlocked_ioctl =
-    .mmap       = _dmach0_mmap,
-    .release    = _dmach0_release,
-};
-
-/**
- * _dmach1_open
+/* maps the DMA ch0 buffer (BAR 0) into user space for memory-like access using
+ * mmap()
  */
-int _dmach1_open(struct inode *inode, struct file *filp) {
-    PCIE_DEV *pcieDev; /* device information */
-
-    /** retrieve the device information  */
-    pcieDev = container_of(inode->i_cdev, PCIE_DEV, dmach1_cdev);
-    filp->private_data = pcieDev; // for other methods
-    /*printk(KERN_INFO "Open dmach1_mmap\n");*/
-    return 0;
-}
-
-/**
- * _dmach1_release
- */
-int _dmach1_release(struct inode *inode, struct file *filp) {
-    PCIE_DEV *pcieDev; /* device information */
-    /**    retrieve the device information  */
-    pcieDev = container_of(inode->i_cdev, PCIE_DEV, dmach1_cdev);
-    filp->private_data = NULL;
-    return 0;
-}
-/* maps the DMA ch1 buffer (BAR 0) into user space for memory-like access using
- * mmap() 
- */
-int _dmach1_mmap(struct file *filp, struct vm_area_struct *vma) {
+int _dmart_mmap(struct file *filp, struct vm_area_struct *vma) {
     int rv = 0, i;
     unsigned long off, phys, vsize, start;
     PCIE_DEV *pcieDev = (PCIE_DEV *) filp->private_data;
-    //u8 *buffer_virt;
-    //dma_addr_t buffer_bus; /* bus address */
-    //u32 byteSize;
-
-                //pcieDev->dmaRT.buf[i].addr_v,
-    //buffer_bus = pcieDev->dmaRT.buf[0].addr_hw;
-    //buffer_virt = pcieDev->dmaRT.buf[0].addr_v;
-
 
     off = vma->vm_pgoff << PAGE_SHIFT;
     vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
@@ -405,18 +372,76 @@ int _dmach1_mmap(struct file *filp, struct vm_area_struct *vma) {
         }
         start += vsize;
     }
-    PDEBUG("CH1 vma=0x%p, vma->vm_start=0x%lx, phys=0x%08lX\n",
+    PDEBUGG("DmaRT vma=0x%p, vma->vm_start=0x%lx, phys=0x%08lX\n",
             vma, vma->vm_start, phys);
     //AT
     //vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
     return 0;
 }
 
-static const struct file_operations dmach1_fops = {
+static const struct file_operations dmach0_fops = {
+    .owner      = THIS_MODULE,
+    .open       = _dmach0_open,
+    //    .read =
+    //    .write =
+    //   .unlocked_ioctl =
+    .mmap       = _dmart_mmap,
+    //.mmap       = _dmach0_mmap,
+    .release    = _dmach0_release,
+};
+
+/**
+ * _dac_open
+ */
+int _dac_open(struct inode *inode, struct file *filp) {
+    PCIE_DEV *pcieDev; /* device information */
+
+    /** retrieve the device information  */
+    pcieDev = container_of(inode->i_cdev, PCIE_DEV, dac_cdev);
+    filp->private_data = pcieDev; // for other methods
+    return 0;
+}
+
+/**
+ * _dac_release
+ */
+int _dac_release(struct inode *inode, struct file *filp) {
+    PCIE_DEV *pcieDev; /* device information */
+    /**    retrieve the device information  */
+    pcieDev = container_of(inode->i_cdev, PCIE_DEV, dac_cdev);
+    filp->private_data = NULL;
+    return 0;
+}
+static ssize_t _dac_write(struct file *file, const char __user *buf,
+        size_t count, loff_t *pos)
+{
+    void __iomem *reg;
+    u32 w;
+    int rv;
+    PCIE_DEV *pcieDev; /* for device information */
+    /* retrieve the device information  */
+    pcieDev = (PCIE_DEV *) file->private_data;
+ //   reg = xdev->bar[xcdev->bar] + *pos;
+    reg = &pcieDev->pModDmaHregs->dacsReg;
+    /* only 32-bit aligned and 32-bit multiples */
+    if (*pos & 3)
+        return -EPROTO;
+    rv = copy_from_user(&w, buf, 4);
+    if (rv)
+        printk(KERN_WARNING "copy from user failed %d/4, but continuing.\n", rv);
+
+    mutex_lock(&pcieDev->io_lock);
+    iowrite32(w, reg);
+    mutex_unlock(&pcieDev->io_lock);
+    *pos += 4;
+    return 4;
+}
+static const struct file_operations dac_fops = {
     .owner   = THIS_MODULE,
-    .open    = _dmach1_open,
-    .mmap    = _dmach1_mmap,
-    .release = _dmach1_release,
+    .open    = _dac_open,
+    //.read = char_ctrl_read,
+    .write = _dac_write,
+    .release = _dac_release,
 };
 
 /**
@@ -427,25 +452,11 @@ static irqreturn_t _irq_handler(int irq, void *dev_id) {
     unsigned long flags;
     int tmp;
     irqreturn_t rv = IRQ_HANDLED;
-    /*int buffer_number;*/
-    /*int dma_channel_active;*/
-    /*STATUS_REG sReg;*/
-    /*COMMAND_REG cReg;*/
 
     pcieDev = (PCIE_DEV *)pci_get_drvdata(dev_id);
     spin_lock_irqsave(&pcieDev->irq_lock, flags);
 
     // No need to Ack MSI IRQs
-    /*sReg.reg32 = ioread32((void *)&pcieDev->pHregs->status);*/
-    /*if (sReg.statFlds.DmaC == 1) {*/
-    /*//    sReg.statFlds.DmaC==1*/
-    /*iowrite32(sReg.reg32, (void *)&pcieDev->pHregs->status);*/
-    /*}*/
-
-    /*cReg.reg32 = ioread32((void *)&pcieDev->pModDmaHregs->dmaControl);*/
-    /*cReg.cmdFlds.DmaE = 0;*/
-    // AcqE
-    /*iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);*/
 
     /*buffer_number =*/
     /*ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus); // testing*/
@@ -504,8 +515,8 @@ int set_dma_mask(struct pci_dev *pdev) {
 }
 
 int configurePCI(PCIE_DEV *pcieDev) {
-    /*u16 reg16 = 0;*/
     int i = 0;
+    void __iomem *reg;
     int rv = 0;
     resource_size_t bar_start, bar_len; //, bar_end;
     unsigned long bar_flags;
@@ -529,7 +540,7 @@ int configurePCI(PCIE_DEV *pcieDev) {
         /*ioremap_nocache(pcieDev->memIO[i].start, pcieDev->memIO[i].len);*/
         pcieDev->memIO[i].phys = bar_start;
         pcieDev->memIO[i].psize = bar_len;
-        PDEBUG("_pcie_probe start 0x%X, len 0x%X, flags 0x%X \n", (int)bar_start,
+        PDEBUGG("_pcie_probe start 0x%X, len 0x%X, flags 0x%X \n", (int)bar_start,
                 (int)bar_len, (int)bar_flags);
 
         if (!pcieDev->memIO[i].vaddr) {
@@ -539,7 +550,8 @@ int configurePCI(PCIE_DEV *pcieDev) {
     }
     // virtual pointer to board registers
     pcieDev->pShapiHregs = (PCIE_SHAPI_HREGS *)pcieDev->memIO[1].vaddr;
-    shapiMagic = ioread32((void *)&pcieDev->pShapiHregs->shapiVersion);
+    reg = &pcieDev->pShapiHregs->shapiVersion;
+    shapiMagic = ioread32(reg);
     PDEBUG("shapiVersion 0x%08x\n", shapiMagic);
     if (shapiMagic != 0x53480100) {
         printk(KERN_ERR "_pcie: not a SHAPI device  [0x%08X]. Aborting.\n",
@@ -549,25 +561,23 @@ int configurePCI(PCIE_DEV *pcieDev) {
         return -1;
     }
     // Module Regs on BAR1
+    reg = &pcieDev->pShapiHregs->firstModAddress;
     pcieDev->pModDmaHregs =
-        (SHAPI_MOD_DMA_HREGS *)(pcieDev->memIO[1].vaddr +
-                ioread32((void *)&pcieDev->pShapiHregs
-                    ->firstModAddress));
-    PDEBUG("Config done rv: %d\n",rv);
+        (SHAPI_MOD_DMA_HREGS *)(pcieDev->memIO[1].vaddr + ioread32(reg));
+    printk(KERN_NOTICE "%s configurePCI done rv:%d \n", DRV_NAME, rv);
+    //PDEBUG("Config done rv: %d\n",rv);
     return rv;
 }
 
 int setup_dma(PCIE_DEV *pcieDev) {
     int i = 0;
-//    u8 *buffer_virt;
-//    dma_addr_t buffer_bus; /* bus address */
+    void __iomem *reg;
     u32 byteSize;
-    PDEBUG("Entered setup_dma\n");
     /**
       setting DMA regions */
     byteSize = ioread32((void *)&pcieDev->pModDmaHregs->dmaMaxBytes);
     pcieDev->dmaIO.buf_size = byteSize; // Set to the FPGA Maximum for now
-    PDEBUG("setup_dma MAX  0x%08x\n", byteSize);
+    PDEBUGG("setup_dma MAX  0x%08x\n", byteSize);
     /* write the buffer size to the FPGA*/
     iowrite32(byteSize, // set to Maximum for now
             (void *)&pcieDev->pModDmaHregs->dmaByteSize);
@@ -600,46 +610,22 @@ int setup_dma(PCIE_DEV *pcieDev) {
             return -ENOMEM;
         }
     }
-    /*
-       if (!buffer_virt || !buffer_bus) {
-       printk(KERN_ERR "setup_dma dma_alloc_coherent error(v:%p hw:%p). EXIT\n",
-       buffer_virt, (void *)buffer_bus);
-       return -ENOMEM;
-       }
-       memset(buffer_virt, 0, byteSize * DMA_BUFFS);
-       */
     for (i = 0; i < DMA_BUFFS; i++) {
 
         memset((void*) (pcieDev->dmaIO.buf[i].addr_v), 0, pcieDev->dmaIO.buf_size);
         // WRITE pci MA registers
-        iowrite32(pcieDev->dmaIO.buf[i].addr_hw,
-                (void* ) &pcieDev->pModDmaHregs->dmaBusAddr[i]);
+        reg = &pcieDev->pModDmaHregs->dmaBusAddr[i];
+        iowrite32(pcieDev->dmaIO.buf[i].addr_hw, reg);
+//                (void* ) &pcieDev->pModDmaHregs->dmaBusAddr[i]);
 
         memset((void*) (pcieDev->dmaRT.buf[i].addr_v), 0, PAGE_SIZE);
-        iowrite32(pcieDev->dmaRT.buf[i].addr_hw,
-                (void* ) &pcieDev->pModDmaHregs->dmaPollBusAddr[i]);
+        reg = &pcieDev->pModDmaHregs->dmaPollBusAddr[i];
+        iowrite32(pcieDev->dmaRT.buf[i].addr_hw, reg);
+               // (void* ) &pcieDev->pModDmaHregs->dmaPollBusAddr[i]);
         //(void*) & pcieDev->pHregs->HwDmaAddr[i]);
     }
 
     pcieDev->dmaIO.buf_actv = 0;
-    //pcieDev->dmaIO.hw_actv = pcieDev->dmaIO.buf[0].addr_hw;
-    // Alloc unique buffer space for Polling DMA
-    /*
-    buffer_virt = dma_alloc_coherent(&pcieDev->pdev->dev, PAGE_SIZE, &buffer_bus,
-            GFP_KERNEL);
-    if (!buffer_virt || !buffer_bus) {
-        printk(KERN_ERR
-                "setup_dma Poll dma_alloc_coherent error(v:%p hw:%p). EXIT\n",
-                buffer_virt, (void *)buffer_bus);
-        return -ENOMEM;
-    }
-    memset(buffer_virt, 0, PAGE_SHIFT);
-    iowrite32(buffer_bus, (void *)&pcieDev->pModDmaHregs->dmaPollBusAddr);
-
-    pcieDev->dmaPollBuff.addr_hw = buffer_bus;
-    pcieDev->dmaPollBuff.addr_v = buffer_virt;
-
-    */
     return 0;
 }
 
@@ -648,10 +634,12 @@ int setup_dma(PCIE_DEV *pcieDev) {
  */
 int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
     int rv;
+    void __iomem *reg;
     PCIE_DEV *pcieDev = NULL;
     STATUS_REG sReg;
     COMMAND_REG cReg;
     u32 ipmc_add;
+    u32 fwVersion;
     void *bar0_vaddr;
     void *bar1_vaddr;
     union {
@@ -669,6 +657,8 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
     pci_set_drvdata(pdev, pcieDev);
 
     sema_init(&pcieDev->open_sem, 1);
+    mutex_init(&pcieDev->io_lock);
+    mutex_init(&pcieDev->open_lock);
     /* enabling PCI board */
     rv = pci_enable_device(pdev);
     if (rv) {
@@ -697,16 +687,18 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
         printk("KERN_ERR _pcie: error in PCI configuration. Aborting.\n");
         return rv;
     }
-    PDEBUG("Config done\n");
+    PDEBUGG("Config done\n");
     // Set up DMA
     rv = setup_dma(pcieDev);
     if (rv != 0) {
         printk("KERN_ERR _pcie: error in DMA setup. Aborting.\n");
         return rv;
     }
-    PDEBUG("Setup done\n");
+    PDEBUGG("Setup done\n");
     cReg.reg32 = 0; // Reset Board
-    iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
+    reg = &pcieDev->pModDmaHregs->dmaControl;
+    iowrite32(cReg.reg32, reg);
+    //(void *)&pcieDev->pModDmaHregs->dmaControl);
 
     /*sReg.reg32 = ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus);*/
     /*ioread32((void *)&pcieDev->pHregs->status);*/
@@ -717,11 +709,24 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
 
     sReg.reg32 = ioread32((void *)&pcieDev->pModDmaHregs->dmaStatus);
     ipmc_add = sReg.statFlds.IpmcAdd ;
-    PDEBUG("fwVersion 0x%08x\n",
-            ioread32((void *)&pcieDev->pShapiHregs->fwVersion));
+    fwVersion = ioread32((void *)&pcieDev->pShapiHregs->fwVersion);
+     /* check for outdated FW version */
+    if (fwVersion < FPGA_FW_VERSION){
+        printk(KERN_ERR "%s:probe The FPGA FW 0x%08X is is no longer compatible with this driver. Aborting.\n", 
+                DRV_NAME, fwVersion);
+        return -1;
+    }
+    /* check for future major/minor version */
+    else if (fwVersion >= (FPGA_FW_VERSION + 0x00010000)){
+        printk(KERN_ERR "%s:probe The FPGA FW 0x%08X is newer than this driver. Aborting.\n",
+                DRV_NAME, fwVersion);
+        return -1;
+    }
+
+    PDEBUG("fwVersion 0x%08x\n", fwVersion);
     PDEBUG("shapi Time Stamp %d\n",
             ioread32((void *)&pcieDev->pShapiHregs->fwTimeStamp));
-    PDEBUG("scratchReg 0x%08x\n",
+    PDEBUGG("scratchReg 0x%08x\n",
             ioread32((void *)&pcieDev->pShapiHregs->scratchReg));
     /*Read 12 Chars from FW Name String*/
     nameArr.uName[0] = ioread32((void *)&pcieDev->pShapiHregs->fwName[0]);
@@ -744,7 +749,7 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
     nameArr.uName[0] = ioread32((void *)&pcieDev->pModDmaHregs->modName[0]);
     nameArr.uName[1] = ioread32((void *)&pcieDev->pModDmaHregs->modName[1]);
     nameArr.uName[2] = 0;
-    PDEBUG("Mod Shapi fwName \"%s\"\n", nameArr.sName);
+    PDEBUGG("Mod Shapi fwName \"%s\"\n", nameArr.sName);
 
     PDEBUGG("_pcie_probe Bar 1 address 0 0x%08x\n", ioread32(bar1_vaddr));
     /*iowrite32(0xA5, bar1_vaddr);*/
@@ -769,13 +774,14 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
         printk(KERN_ERR "request_linux_irq irq %d error[%d]\n", pdev->irq, rv);
         return rv;
     }
-    PDEBUG("_pcie irq %d handler installed\n", pdev->irq);
+    PDEBUGG("_pcie irq %d handler installed\n", pdev->irq);
     cReg.cmdFlds.DmaIntE = 1;
-    iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
+    reg = &pcieDev->pModDmaHregs->dmaControl;
+    iowrite32(cReg.reg32, reg);
+    //iowrite32(cReg.reg32, (void *)&pcieDev->pModDmaHregs->dmaControl);
 
     spin_lock_init(&pcieDev->irq_lock);
     init_waitqueue_head(&pcieDev->rd_q);
-    /*_minor = 0; // TODO Change*/
     pcieDev->devno = MKDEV(device_major, dev_minor);
 
     cdev_init(&pcieDev->cdev, &ctrl_fops);
@@ -791,9 +797,9 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
 
     pcieDev->dev = device_create(atca_v6_class, NULL, pcieDev->devno, NULL,
             NODENAMEFMT, ipmc_add); // No parent device
-
+    dev_minor++;
     /*Now for DMA ch0 device node*/
-    pcieDev->dmach0_devno = MKDEV(device_major, dev_minor + 1);
+    pcieDev->dmach0_devno = MKDEV(device_major, dev_minor);
     cdev_init(&pcieDev->dmach0_cdev, &dmach0_fops);
     rv = cdev_add(&pcieDev->dmach0_cdev, pcieDev->dmach0_devno, 1);
     if (rv) {
@@ -804,16 +810,17 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
         device_create(atca_v6_class, pcieDev->dev, pcieDev->dmach0_devno, NULL,
                 DMACH0NODENAMEFMT, ipmc_add);
 
-    pcieDev->dmach1_devno = MKDEV(device_major, dev_minor + 2);
-    cdev_init(&pcieDev->dmach1_cdev, &dmach1_fops);
-    rv = cdev_add(&pcieDev->dmach1_cdev, pcieDev->dmach1_devno, 1);
+    dev_minor++;
+    pcieDev->dac_devno = MKDEV(device_major, dev_minor);
+    cdev_init(&pcieDev->dac_cdev, &dac_fops);
+    rv = cdev_add(&pcieDev->dac_cdev, pcieDev->dac_devno, 1);
     if (rv) {
-        printk(KERN_ERR "Error %d adding _dmach1 device", rv);
+        printk(KERN_ERR "%s Error %d adding _dac device", DRV_NAME, rv);
         return -EIO;
     }
-    pcieDev->dmach1_dev =
-        device_create(atca_v6_class, NULL, pcieDev->dmach1_devno, NULL,
-                DMACH1NODENAMEFMT, ipmc_add);
+    pcieDev->dac_dev =
+        device_create(atca_v6_class, NULL, pcieDev->dac_devno, NULL,
+                DACNODENAMEFMT, ipmc_add);
 
     printk(KERN_NOTICE "%s installed, major:%d\n", DRV_NAME, device_major);
 
@@ -821,7 +828,7 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
             ioread32((void *) &pcieDev->pModDmaHregs->dmaStatus));
     PDEBUG("Mod dmaControl 0x%08x\n",
             ioread32((void *) &pcieDev->pModDmaHregs->dmaControl));
-    dev_minor += 3;
+    dev_minor ++;
     return 0;
 }
 
@@ -831,13 +838,16 @@ int _probe(struct pci_dev *pdev, const struct pci_device_id *id) {
 void _remove(struct pci_dev *pdev) {
     unsigned long flags;
     int i;
+    void __iomem *reg;
     PCIE_DEV *pcieDev;
 
     /* get the device information data */
     pcieDev = (PCIE_DEV *) pci_get_drvdata(pdev);
 
     /*  Reset  Device */
-    iowrite32(0, (void *)&pcieDev->pModDmaHregs->dmaControl);
+    //iowrite32(0, (void *)&pcieDev->pModDmaHregs->dmaControl);
+    reg = &pcieDev->pModDmaHregs->dmaControl;
+    iowrite32(0u, reg);
 
     /* disable registered IRQ */
     if (pcieDev->irq)
@@ -858,10 +868,10 @@ void _remove(struct pci_dev *pdev) {
     // ----- ----- -----
     spin_unlock_irqrestore(&pcieDev->irq_lock, flags);
     cdev_del(&pcieDev->dmach0_cdev);
-    cdev_del(&pcieDev->dmach1_cdev);
+    cdev_del(&pcieDev->dac_cdev);
     cdev_del(&pcieDev->cdev);
     device_destroy(atca_v6_class, pcieDev->dmach0_devno);
-    device_destroy(atca_v6_class, pcieDev->dmach1_devno);
+    device_destroy(atca_v6_class, pcieDev->dac_devno);
     device_destroy(atca_v6_class, pcieDev->devno); // destroy parent
 
     /* deregistering DMAable areas and virtual addresses for the board */
@@ -873,18 +883,16 @@ void _remove(struct pci_dev *pdev) {
                 pcieDev->dmaIO.buf[i].addr_v,
                 pcieDev->dmaIO.buf[i].addr_hw);
         // Clear  pci device Mem Address registers
-        iowrite32(0, (void *) &pcieDev->pModDmaHregs->dmaBusAddr[i]);
+        reg = &pcieDev->pModDmaHregs->dmaBusAddr[i];
+        iowrite32(0u, reg);
         pci_free_consistent(pcieDev->pdev, PAGE_SIZE,
                 pcieDev->dmaRT.buf[i].addr_v,
                 pcieDev->dmaRT.buf[i].addr_hw);
         // Clear  pci device Mem Address registers
-        iowrite32(0, (void *) &pcieDev->pModDmaHregs->dmaPollBusAddr[i]);
+        reg = &pcieDev->pModDmaHregs->dmaPollBusAddr[i];
+        iowrite32(0u, reg);
+        //iowrite32(0, (void *) &pcieDev->pModDmaHregs->dmaPollBusAddr[i]);
     }
-    /*
-    dma_free_coherent(&pcieDev->pdev->dev, PAGE_SIZE, pcieDev->dmaPollBuff.addr_v,
-            pcieDev->dmaPollBuff.addr_hw);
-    iowrite32(0, (void *) &pcieDev->pModDmaHregs->dmaPollBusAddr);
-    */
     for (i = 0; i < NUM_BARS; i++)
         iounmap(pcieDev->memIO[i].vaddr);
     //AT
@@ -916,23 +924,21 @@ static int __init atca_init(void) {
         goto fail;
     }
     device_major = MAJOR(devno);
-    PDEBUG("_init: device_num:%d\n", device_major);
+    PDEBUGG("_init: device_num:%d\n", device_major);
     dev_minor = 0;
 
     atca_v6_class = class_create(THIS_MODULE, DRV_NAME);
     if (IS_ERR(atca_v6_class)) {
-        printk(KERN_ERR "Unable to allocate class\n");
+        printk(KERN_ERR "%s. Unable to allocate class\n", DRV_NAME);
         rv = PTR_ERR(atca_v6_class);
-
         goto unreg_chrdev;
     }
 
     /* registering the board */
     rv = pci_register_driver(&_atca_pci);
     if (rv) {
-        printk(KERN_ERR "pcieAdc_init pci_register_driver error(%d).\n", rv);
+        printk(KERN_ERR "%s. pci_register_driver error(%d).\n", DRV_NAME, rv);
         goto unreg_class;
-        //    return rv;
     }
     return rv;
 unreg_class:
@@ -959,7 +965,7 @@ module_init(atca_init);
 module_exit(atca_exit);
 
 MODULE_LICENSE("Dual BSD/GPL");
-MODULE_DESCRIPTION("Module for PCIe KINTEX FPGA ");
+MODULE_DESCRIPTION("Module for ATCA-IOP Virtex 6 FPGA");
 MODULE_AUTHOR("Bernardo Carvalho/IST-IPFN");
 
 //  vim: syntax=c ts=4 sw=4 sts=4 sr et
