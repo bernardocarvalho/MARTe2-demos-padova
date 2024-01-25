@@ -58,7 +58,7 @@ typedef struct _DMA_CH1_PCKT {
     uint32 header; // h5431BACD
     int32 channel[60]; // 24 56
     uint32 foot_time_cnt;
-    uint32 footer; // h5431BACD
+    uint32 footer; // h9876ABDC
     uint8 page_fill[3840];
 } DMA_CH1_PCKT;
 

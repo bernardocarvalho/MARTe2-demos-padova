@@ -1,7 +1,7 @@
 /**
  * @file AtcaIopDAC.h
  * @brief Header file for class AtcaIopDAC
- * @date 19/10/2023
+ * @date 19/01/2024
  * @author Andre Neto / Bernardo Carvalho
  *
  * Based on Example:
@@ -39,9 +39,8 @@
 #include "EventSem.h"
 #include "EmbeddedServiceMethodBinderI.h"
 #include "SingleThreadService.h"
-//#include "MessageI.h"
-//#include "RegisteredMethodsMessageFilter.h"
-
+#include "MessageI.h"
+#include "RegisteredMethodsMessageFilter.h"
 
 /*---------------------------------------------------------------------------*/
 /*                           Class declaration                               */
@@ -49,63 +48,32 @@
 namespace MARTe {
 
     /**
-     * The number of signals (2 time signals + ).
+     * The number of signals 
      */
-    //	const uint32 ATCA_IOP_MAX_CHANNELS = 32u;
 
     const uint32 ATCA_IOP_N_DACs = 2u;
     const uint32 ATCA_IOP_MAX_DAC_CHANNELS = 16u;
 
-    /**
-     * The number of buffers to synchronise with the DMA
-     */
-
-    /**
-     * @brief A DataSource that simulates an ADC board
-     * TODO
-     * <pre>
-     * +ADCSim = {
-     *     Class = ADCSimulator
-     *     DeviceName = "/dev/atca_v6" //Mandatory
-     *     Signals = {
-     *         Counter = {
-     *             Type = uint32 //int32 also supported
-     *         }
-     *         Time = {
-     *             Type = uint32 //int32 also supported
-     *             Frequency = 1000
-     *         }
-     *         ADC0 = {
-     *             Type = int32
-     *         }
-     *         ADC1 = {
-     *             Type = uint32
-     *         }
-     *         ADC2 = {
-     *             Type = uint32
-     *         }
-     *         ADC3 = {
-     *             Type = uint32
-     *         }
-     *         ADC0Decim = {
-     *             Type = uint32
-     *         }
-     *         ADC1Decim = {
-     *             Type = uint32
-     *         }
-     *         ADC2Decim = {
-     *             Type = uint32
-     *         }
-     *         ...
-     *         ADC7Decim = {
-     *             Type = uint32
-     *         }
-     *     }
-     * }
-     * </pre>
-     */
-    //class AtcaIopDAC: public DataSourceI, public EmbeddedServiceMethodBinderI {
-    class AtcaIopDAC: public DataSourceI {
+/**
+ * @brief A DataSource which provides an analogue output interface to the ATCA IOP  boards.
+ * @details The configuration syntax is (names are only given as an example):
+ *
+ * <pre>
+ * +AtcaIop_0_DAC = {
+ *     Class = AtcaIop::AtcaIopDAC
+ *     DeviceName = "/dev/atca_v6_dac_2" //Mandatory
+ *     Signals = {
+ *         DAC0_0 = {
+ *             Type = float32 //Mandatory. Only type that is supported.
+ *             OutputRange = 10.0 //Mandatory. The channel Module Output Range in volt.
+ *             //OutputPolarity = Bipolar //Optional. Possible values: Bipolar, Unipolar. Default value Unipolar.
+ *         }
+ *     }
+ * }
+ * </pre>
+ * Note that at least one of the GAMs writing to this DataSource must have set one of the signals with Trigger=1 (which forces the writing of all the signals to the DAC).
+ */
+    class AtcaIopDAC: public DataSourceI, public MessageI {
         public:
             CLASS_REGISTER_DECLARATION()
                 /**
@@ -215,10 +183,6 @@ namespace MARTe {
              */
             StreamString deviceName;
             /**
-             * The numberOfChannels
-             */
-            uint32 numberOfChannels;
-            /**
              * The board file descriptor
              */
             int32 boardFileDescriptor;
@@ -229,32 +193,36 @@ namespace MARTe {
             int32 dacValues[ATCA_IOP_N_DACs];
 
             /**
-             *      * The signal memory
-             *           */
+             * The signal memory
+             */
             float32 *channelsMemory;
 
+            /**
+             * The DACs that are enabled
+             */
+            // bool dacEnabled[ATCA_IOP_MAX_DAC_CHANNELS];
 
             /**
-             *      * The DACs that are enabled
-             *           */
-            bool dacEnabled[ATCA_IOP_MAX_DAC_CHANNELS];
+            * The board individual channel output ranges
+            */
+            float32 outputRange[ATCA_IOP_MAX_DAC_CHANNELS];
 
             /**
-             *      * The number of enabled DACs
-             *           */
+             * The number of enabled DACs
+             */
             uint32 numberOfDACsEnabled;
 
-
             /**
-             * The semaphore for the synchronisation between the EmbeddedThread and the Synchronise method.
+             * Filter to receive the RPC which allows to change the...
              */
-            //EventSem synchSem;
-
+            ReferenceT<RegisteredMethodsMessageFilter> filter;
 
             /**
              * True if at least one trigger was set.
              */
             bool triggerSet;
+            
+            int32 SetDacReg(uint32 channel, float32 val) const;
 
     };
 }

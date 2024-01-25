@@ -22,14 +22,16 @@
 #
 #############################################################
 
-OBJSX=AtcaIopADC.x
+OBJSX=AtcaIopDAC.x AtcaIopADC.x
 
 PACKAGE=Components/DataSources
+
 ROOT_DIR=../..
 MAKEDEFAULTDIR=$(MARTe2_DIR)/MakeDefaults
 include $(MAKEDEFAULTDIR)/MakeStdLibDefs.$(TARGET)
 
 INCLUDES += -I.
+INCLUDES += -I./include
 INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L0Types
 INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L1Portability
 INCLUDES += -I$(MARTe2_DIR)/Source/Core/BareMetal/L2Objects
@@ -42,8 +44,8 @@ INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L3Services
 INCLUDES += -I$(MARTe2_DIR)/Source/Core/Scheduler/L4Messages
 
 all: $(OBJS)    \
-    $(BUILD_DIR)/AtcaIopADC$(LIBEXT) \
-    $(BUILD_DIR)/AtcaIopADC$(DLLEXT)
+    $(BUILD_DIR)/AtcaIop$(LIBEXT) \
+    $(BUILD_DIR)/AtcaIop$(DLLEXT)
 	echo  $(OBJS)
 
 include depends.$(TARGET)
